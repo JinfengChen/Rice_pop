@@ -12,7 +12,7 @@ def usage():
     message='''
 python Anno_Nexus_tree.py --input test.phy.nexus.newick --format newick --anno test.phy.anno
 
-Annotation tree file with color and other table information.
+Annotation tree file with color and other table information (For figtree use only. We use phytools in R to draw tree with barplot trait).
 1. if the tree is newick not nexus we convert newick to nexus
 2. Add annotation table into nexus tree, put color on branch and leaf if specified
 
@@ -20,6 +20,7 @@ Annotation tree file with color and other table information.
 (Gamma:0.46568,(Beta:-0.15920,(Delta:0.12426,Epsilon:0.04163):0.84286):0.05225,Alpha:0.39186):0.00000;
 --format: format of tree file (newick and nexus), default is nexus, optional
 --anno: annotation table file, we only convert newick to nexus if anno table is not specified, optional
+#The first columen need to be Taxa and if use Label as one columen that will replace the sample name the original tree
 Taxa	Origin	Color
 Gamma	indian	orange
 Beta	china	yellow
@@ -53,11 +54,15 @@ def readanno(infile):
 def figtree_color():
     color = defaultdict(lambda : str())
     color = {
-        'red'     : '#C13900',
-        'orange'  : '#833F00',
+        'red'     : '#EE3B3B',
+        'orange'  : '#C13900',
         'gray'    : '#3F4353',
         'yellow'  : '#FF7C00',
         'blue'    : '#008BFF',
+        'cornflowerblue'       : '#002681',
+        'cyan'    : '#00A5FF',
+        'chocolate'            : '#833F00',
+        'darkorchid'           : '#D66E8C',
         'green'   : '#416214'
     }
     #for k in color.keys():
@@ -126,26 +131,40 @@ def main():
         #        print '%s\t%s\t%s' %(taxa, key, anno[taxa][key])
         tree = dendropy.Tree()
         tree.read_from_path(args.input, 'nexus')
+        ##annotate leaf
         for taxon in tree.taxon_set:
             #print taxon, len(anno[str(taxon)].keys())
             taxa = str(taxon)
             for key in anno[taxa].keys():
-                ##attr is not a variable but a string used for all attribute we assigned.
-                ##key is a variable that we speficy name for each attribute we assigned
-                ##alway assign value to taxon.attr first then add_bound_attribute after that
+                #need to manual add key such as Origin and Group if you need to use these as annotation
+                #print key, anno[taxa][key]
                 if key == '!color':
-                    if rl.search(args.color):
-                        taxon.attr = color_table[anno[taxa][key]]
-                        taxon.annotations.add_bound_attribute('attr', key)
-                else:
-                    taxon.attr = anno[taxa][key]
-                    taxon.annotations.add_bound_attribute('attr', key)
+                    #print 'color: %s, %s' %(key, anno[taxa][key])
+                    if rl.search(args.color) and not anno[taxa]['!color'] == 'black':
+                        taxon.color = color_table[anno[taxa][key]]
+                        taxon.annotations.add_bound_attribute('color', key)
+                elif key == 'Origin':
+                    #print 'no color: %s, %s' %(key, anno[taxa][key])
+                    taxon.origin = anno[taxa][key]
+                    taxon.annotations.add_bound_attribute('origin', key)
+                elif key == 'mPing':
+                    taxon.mping = anno[taxa][key]
+                    taxon.annotations.add_bound_attribute('mping', key)
+                elif key == 'Group':
+                    taxon.group = anno[taxa][key]
+                    taxon.annotations.add_bound_attribute('group', key)
+                elif key == 'Name':
+                    taxon.name = anno[taxa][key]
+                    taxon.annotations.add_bound_attribute('name', key)
+                elif key == 'Label':
+                    taxon.label = anno[taxa][key]
+                    taxon.annotations.add_bound_attribute('label', key)
 
-        ##annotation branch
+        ##annotate branch
         for node in tree.postorder_node_iter():
             if node.taxon is not None:
                 taxa = str(node.taxon)
-                if anno[taxa].has_key('!color') and rb.search(args.color):
+                if anno[taxa].has_key('!color') and not anno[taxa]['!color'] == 'black' and rb.search(args.color):
                     node.color = color_table[anno[taxa]['!color']]
                     node.annotations.add_bound_attribute('color', '!color')
                 else:
