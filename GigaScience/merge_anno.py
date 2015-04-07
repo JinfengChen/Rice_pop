@@ -10,9 +10,11 @@ from Bio import SeqIO
 def usage():
     test="name"
     message='''
-python merge_anno.py
+python merge_anno.py --mode figtree
 
 Generate annotation table for tree view
+--mode: figtree or R
+the difference is just _ or " ", figure use " " and R use _
     '''
     print message
 
@@ -23,7 +25,7 @@ def fasta_id(fastafile):
     return fastaid
 
 #1       IRRI    IRIS 313-15896  FEDEARROZ 50::G1-1              FEDEARROZ 50    Colombia        IRGC 126957     FEDEARROZ 50::G1        Indica  ERS467753
-def readtable_1A(infile, group_color):
+def readtable_1A(infile, group_color, mode):
     data = defaultdict(lambda : list)
     #ofile1 = open('rice_line_IRRI_2466_1.download.list', 'w')
     #ofile2 = open('rice_line_IRRI_2466_2.download.list', 'w')
@@ -39,9 +41,10 @@ def readtable_1A(infile, group_color):
                 #count += 1
                 #rank   = int(float(count - 1)/float(num))
                 unit   = re.split(r'\t',line)
-                #unit[2]= re.sub(r' ', '_', unit[2])
+                unit[2]= re.sub(r' ', '_', unit[2]) if mode == 'R' else unit[2] # figtree and R need difference here
                 #print unit[5], unit[6], unit[9]
                 sample_name = unit[5] if not unit[5] == '' else 'NA'
+                sample_name = re.sub(r'\'', '', sample_name)
                 origin      = unit[6] if not unit[6] == '' else 'NA'
                 group       = unit[9] if not unit[9] == '' else 'NA'
                 color       = group_color[group] if group_color.has_key(group) else 'black'
@@ -63,6 +66,7 @@ def readtable_1B(infile, group_color):
             if len(line) > 2 and not line.startswith(r'E'): 
                 unit = re.split(r'\t',line)
                 sample_name = unit[4] if not unit[4] == '' else unit[3]
+                sample_name = re.sub(r'\'', '', sample_name)
                 origin      = unit[5] if not unit[5] == '' else 'NA'
                 group       = unit[7] if not unit[7] == '' else 'NA'
                 color       = group_color[group] if group_color.has_key(group) else 'black'
@@ -93,17 +97,24 @@ def readtable_sra(infile):
 
 #ERS467799_RelocaTEi     11      31      IRIS313-9346    Taiwan  Temperate japonica
 #ERS470219_RelocaTEi     30      60      B001    China   Temperate japonica
-def read_mping(infile, mping):
+def read_mping(infile, mping, mode):
     with open (infile, 'r') as filehd:
         for line in filehd:
             line = line.rstrip()
             if len(line) > 2: 
                 unit = re.split(r'\t',line)
-                uid  = re.sub(r'IRIS', r'IRIS ', unit[3])
+                uid  = re.sub(r'IRIS', r'IRIS_', unit[3]) if mode == 'R' else re.sub(r'IRIS', r'IRIS ', unit[3])
                 mping[uid] = unit[2]
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-m', '--mode')
+    parser.add_argument('-v', dest='verbose', action='store_true')
+    args = parser.parse_args()
+
+    if not args.mode:
+        args.mode = 'R'
 
     group_color = {
         'Indica'             : 'green',
@@ -116,11 +127,11 @@ def main():
     }
   
     mping = defaultdict(lambda : int())
-    read_mping('../CAAS/Japonica_fastq_RelocaTEi_mPing.summary', mping)
-    read_mping('../IRRI/Japonica_fastq_RelocaTEi_mPing_IRRI_Jap.summary', mping)
+    read_mping('../CAAS/Japonica_fastq_RelocaTEi_mPing.summary', mping, args.mode)
+    read_mping('../IRRI/Japonica_fastq_RelocaTEi_mPing_IRRI_Jap.summary', mping, args.mode)
 
     #sample2sra = readtable_sra('seq_file_mapping_to_SRA.txt')
-    irri = readtable_1A('rice_line_metadata_20141029_TableS1A.txt', group_color)
+    irri = readtable_1A('rice_line_metadata_20141029_TableS1A.txt', group_color, args.mode)
     caas = readtable_1B('rice_line_metadata_20141029_TableS1B.txt', group_color)
     ofile = open('rice_line_ALL_3000.anno.list', 'w')
     print >> ofile, 'Taxa\tColor\tLabel\tName\tOrigin\tGroup\tmPing'
