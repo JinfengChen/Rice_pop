@@ -11,7 +11,8 @@ import pylab
 def usage():
     test="name"
     message='''
-python Draw_Nexus_Tree.py --input figtree/test.phy.nexus.newick --anno figtree/test.phy.anno
+python Draw_Nexus_Tree.py --input figtree/test.phy.nexus.newick --anno figtree/test.phy.anno --col 7
+python Draw_Nexus_Tree.py --input test.phy.nexus.newick --anno test.phy.anno --col 4
 
 Plot newick phylogenetic tree with trait values in barplot using phytools in R.
 http://blog.phytools.org/2014/05/new-version-of-plottreewbars-that.html
@@ -26,7 +27,7 @@ Beta	china	yellow
 Delta	UK	gray
 Epsilon	EPS	blue
 Alpha	US	red
-
+--col: columen to draw trait
 
     '''
     print message
@@ -49,33 +50,38 @@ def readtable(infile):
                     data[unit[0]] = unit[1]
     return data
 
-def write_R(newick, anno, output):
+def write_R(newick, anno, col, output):
 
     R_cmd='''
 library("ape")
 tree = read.tree(file="%s")
-x = read.table(file="%s", header=1)
-y = setNames(x[,4], x[,1])
+x = read.table(file="%s", sep='\\t', header=1)
+y = setNames(x[,%s], x[,1])
+y = y[match(tree$tip.label, names(y))]
 
 pdf("test.pdf")
 layout(matrix(c(1,2),1,2),c(0.7,0.3))
 #par(mfrow=c(1,2))
 #par(mar=c(4.1,0,1.1,1.1))
 #plotTree(tree, mar=c(5.1,2,1.1,1.1))
-plot(tree,edge.color=c('red','green','red','gray','orange'))
-par(mar=c(5.1,2,1.1,1.1))
-barplot(y,horiz=TRUE,width=1,space=0, ylim=c(0.5,length(tree$tip.label)),names="", axes=FALSE)
-axis(1, at= c(0,20,40), line=3)
+#plot(tree,edge.color=c('red','green','red','gray','orange'))
+plot(tree, show.tip.label = FALSE)
+#plot(tree)
+#par(mar=c(5.1,2,1.1,1.1))
+barplot(y,horiz=TRUE,width=1,space=0, xlim=c(-10, 200),  ylim=c(0.5,length(tree$tip.label)),names="", axes=FALSE)
+axis(1, at= c(0, 100, 200), line=3)
 dev.off()
-''' %(newick, anno)
+''' %(newick, anno, col)
     ofile = open (output, 'w')
     print >> ofile, R_cmd
     ofile.close()
+    os.system('cat %s | R --slave' %(output))
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input')
     parser.add_argument('-a', '--anno')
+    parser.add_argument('-c', '--col')
     parser.add_argument('-v', dest='verbose', action='store_true')
     args = parser.parse_args()
     try:
@@ -84,9 +90,11 @@ def main():
         usage()
         sys.exit(2)
 
+
     tree_file = args.input
     anno_file = args.anno
-    write_R(tree_file, anno_file, 'tree_trait.R')    
+    colume    = args.col
+    write_R(tree_file, anno_file, colume, 'tree_trait.R')    
 
 if __name__ == '__main__':
     main()
