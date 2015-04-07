@@ -20,7 +20,7 @@ Annotation tree file with color and other table information (For figtree use onl
 (Gamma:0.46568,(Beta:-0.15920,(Delta:0.12426,Epsilon:0.04163):0.84286):0.05225,Alpha:0.39186):0.00000;
 --format: format of tree file (newick and nexus), default is nexus, optional
 --anno: annotation table file, we only convert newick to nexus if anno table is not specified, optional
-#The first columen need to be Taxa and if use Label as one columen that will replace the sample name the original tree
+#The first columen need to be Taxa and if use Label as one columen that will replace the sample name the original tree (no branch color then)
 Taxa	Origin	Color
 Gamma	indian	orange
 Beta	china	yellow
@@ -157,8 +157,8 @@ def main():
                     taxon.name = anno[taxa][key]
                     taxon.annotations.add_bound_attribute('name', key)
                 elif key == 'Label':
-                    taxon.label = anno[taxa][key]
-                    taxon.annotations.add_bound_attribute('label', key)
+                    taxon.index = anno[taxa][key]
+                    taxon.annotations.add_bound_attribute('index', 'Index')
 
         ##annotate branch
         for node in tree.postorder_node_iter():

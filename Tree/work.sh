@@ -8,4 +8,5 @@ perl /rhome/cjinfeng/software/bin/fastaDeal.pl --attr id:len 3K_coreSNP-v2.1.pru
 
 echo "annotaion tree, ALL_3000"
 python Anno_Nexus_tree.py --input 3K_coreSNP-v2.1.pruneddata.tab.fasttree.tree --format newick --anno ../GigaScience/rice_line_ALL_3000.anno.list --color bl
+python Anno_Nexus_tree.py --input 3K_coreSNP-v2.1.pruneddata.tab.fasttree.nj.tree --format newick --anno ../GigaScience/rice_line_ALL_3000.anno.list --color bl
 
