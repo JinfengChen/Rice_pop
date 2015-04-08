@@ -10,11 +10,12 @@ from Bio import SeqIO
 def usage():
     test="name"
     message='''
-python merge_anno.py --mode figtree
+python merge_anno.py
 
 Generate annotation table for tree view
 --mode: figtree or R
-the difference is just _ or " ", figure use " " and R use _
+the difference is just _ or " ", figure use " " and R use _. Do not use this, make all consistence with IRIS_313-XXXX
+if use underscore, need to use gsub("'", '', tree$tip.label) to remove the quoate in R 
     '''
     print message
 
@@ -41,7 +42,7 @@ def readtable_1A(infile, group_color, mode):
                 #count += 1
                 #rank   = int(float(count - 1)/float(num))
                 unit   = re.split(r'\t',line)
-                unit[2]= re.sub(r' ', '_', unit[2]) if mode == 'R' else unit[2] # figtree and R need difference here
+                unit[2]= re.sub(r' ', '_', unit[2])
                 #print unit[5], unit[6], unit[9]
                 sample_name = unit[5] if not unit[5] == '' else 'NA'
                 sample_name = re.sub(r'\'', '', sample_name)
@@ -103,7 +104,8 @@ def read_mping(infile, mping, mode):
             line = line.rstrip()
             if len(line) > 2: 
                 unit = re.split(r'\t',line)
-                uid  = re.sub(r'IRIS', r'IRIS_', unit[3]) if mode == 'R' else re.sub(r'IRIS', r'IRIS ', unit[3])
+                #uid  = re.sub(r'IRIS', r'IRIS_', unit[3]) if mode == 'R' else re.sub(r'IRIS', r'IRIS ', unit[3])
+                uid  = re.sub(r'IRIS', r'IRIS_', unit[3])
                 mping[uid] = unit[2]
 
 

@@ -7,3 +7,4 @@ python merge_anno.py --mode R
 cp rice_line_ALL_3000.anno.list rice_line_ALL_3000.anno.R.list
 python merge_anno.py --mode figtree
 cp rice_line_ALL_3000.anno.list rice_line_ALL_3000.anno.figtree.list
+python merge_anno.py
