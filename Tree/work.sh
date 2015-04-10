@@ -11,6 +11,6 @@ python Anno_Nexus_tree.py --input 3K_coreSNP-v2.1.pruneddata.tab.fasttree.tree -
 python Anno_Nexus_tree.py --input 3K_coreSNP-v2.1.pruneddata.tab.fasttree.nj.tree --format newick --anno ../GigaScience/rice_line_ALL_3000.anno.figtree.list --color bl
 
 echo "Draw tree with trait"
-python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.pruneddata.tab.fasttree.nj.tree --anno rice_line_ALL_3000.anno.R.list --col 7 --output 3K_coreSNP-v2.1.pruneddata.tab.fasttree.nj.tree
-python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.pruneddata.tab.fasttree.nj.tree --anno rice_line_ALL_3000.anno.list --col 7 --subsample Japonica --output 3K_coreSNP-v2.1.pruneddata.tab.fasttree.nj.tree
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.pruneddata.tab.fasttree.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --output 3K_coreSNP-v2.1.pruneddata.tab.fasttree.nj.tree
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.pruneddata.tab.fasttree.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --subsample Japonica --output 3K_coreSNP-v2.1.pruneddata.tab.fasttree.nj.tree
 
