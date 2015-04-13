@@ -79,8 +79,8 @@ def valid_nexus(intree):
 def newick2nexus(intree):
     outtree= '%s.nexus.tree' %(intree)
     tree_t = dendropy.Tree()
-    tree_t.read_from_path(intree, 'newick')
-    tree_t.write_to_path(outtree, 'nexus')
+    tree_t.read_from_path(intree, 'newick', preserve_underscores=True)
+    tree_t.write_to_path(outtree, 'nexus', preserve_underscores=True)
     return outtree
 
 def main():

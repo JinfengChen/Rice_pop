@@ -14,3 +14,11 @@ echo "Draw tree with trait"
 python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.pruneddata.tab.fasttree.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --output 3K_coreSNP-v2.1.pruneddata.tab.fasttree.nj.tree
 python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.pruneddata.tab.fasttree.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --subsample Japonica --output 3K_coreSNP-v2.1.pruneddata.tab.fasttree.nj.tree
 
+echo "rice 3000"
+
+qsub -q js run_Build_tree.sh
+
+echo "Anno tree"
+python Anno_Nexus_tree.py --input 3K_coreSNP-v2.1.binary.tab.fasta.fasttree.nomle.nj.tree --format newick --anno rice_line_ALL_3000.anno.list --color bl
+echo "Draw tree with trait"
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.fasta.fasttree.nomle.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --output 3K_coreSNP-v2.1.binary.tab.fasta.fasttree.nomle.nj.tree
