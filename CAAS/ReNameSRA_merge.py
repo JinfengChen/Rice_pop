@@ -98,7 +98,7 @@ def main():
         fq1gz  = '%s/%s_1.fastq.gz' %(dirname, acc)
         fq2gz  = '%s/%s_2.fastq.gz' %(dirname, acc)
         if not os.path.isfile(fq1) and not os.path.isfile(fq1gz):
-            cmd.append('/opt/sratoolkit/2.4.2/bin/fastq-dump --outdir %s --split-files %s' %(dirname, sra))
+            cmd.append('/opt/sratoolkit/2.4.2/bin/fastq-dump --outdir %s --split-files %s' %(dirname, os.path.abspath(sra)))
             cmd.append('gzip %s' %(fq1))
             cmd.append('gzip %s' %(fq2))
             #pass
@@ -107,7 +107,7 @@ def main():
             cmd.append('gzip %s' %(fq2))
         print >> ofile, '\n'.join(cmd)
     ofile.close()
-    
+    runjob('dump.sh', 12) 
 
 if __name__ == '__main__':
     main()

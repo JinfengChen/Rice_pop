@@ -15,6 +15,7 @@ def usage():
 python SumReCall.py --call TEMP --input /rhome/cjinfeng/BigData/00.RD/RelocaTE_i/Simulation/MSU7.Chr4.mPing
 Summary RelocatTE call in current direcory using simulation in input directory
 --call: RelocaTE, TEMP or other
+--check: check unfinished job without results directory or non_ref.gff
 --input: dir of simulation, where we can find insertion simulated gff file "MSU7.Chr4.mPing.rep1.gff"
 
     '''
@@ -89,6 +90,7 @@ def main():
     parser.add_argument('-i', '--input') 
     parser.add_argument('-l', '--list')
     parser.add_argument('-c', '--call')
+    parser.add_argument('-ck', '--check')
     parser.add_argument('-v', dest='verbose', action='store_true')
     args = parser.parse_args()
     try:
@@ -96,6 +98,9 @@ def main():
     except:
         usage()
         sys.exit(2)
+
+    if not args.check:
+        args.check = 0
 
     if not args.call: 
         args.call = 'RelocaTEi'
@@ -113,9 +118,9 @@ def main():
             ref_gff     = '%s/repeat/results/ALL.all_ref_insert.gff' %(dirname)
             call_nonref = parse_gff(non_ref_gff)
             call_ref    = parse_gff(ref_gff)
-            #if not os.path.exists('%s/repeat/results' %(dirname)):
-            #    print 'No output: %s' %(call)
             call_inf    = inf[call] if inf.has_key(call) else 'NA\tNA\tNA'
+            if int(args.check) == 1 and (not os.path.exists('%s/repeat/results' %(dirname)) or not os.path.getsize(non_ref_gff) > 0):
+                print '%s\t%s\t%s\t%s\tNo output' %(call, call_ref, call_nonref, call_inf)
             print '%s\t%s\t%s\t%s' %(call, call_ref, call_nonref, call_inf)
         elif args.call == 'TEMP':
             pass

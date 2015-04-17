@@ -21,7 +21,7 @@ Run RelocaTEi for rice strain in Japonica_fastq
 
 
 def runjob(script, lines):
-    cmd = 'perl /rhome/cjinfeng/software/bin/qsub-pbs.pl --maxjob 30 --lines %s --interval 120 --resource walltime=100:00:00,mem=2G --convert no %s' %(lines, script)
+    cmd = 'perl /rhome/cjinfeng/software/bin/qsub-pbs.pl --maxjob 60 --lines %s --interval 120 --resource walltime=100:00:00,mem=2G --convert no %s' %(lines, script)
     #print cmd 
     os.system(cmd)
 

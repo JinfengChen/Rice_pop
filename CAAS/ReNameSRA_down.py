@@ -24,7 +24,7 @@ def fasta_id(fastafile):
 
 
 def runjob(script, lines):
-    cmd = 'perl /rhome/cjinfeng/software/bin/qsub-pbs.pl --maxjob 10 --lines %s --interval 120 --resource walltime=100:00:00,mem=2G --convert no %s' %(lines, script)
+    cmd = 'perl /rhome/cjinfeng/software/bin/qsub-pbs.pl --maxjob 15 --lines %s --interval 120 --resource walltime=100:00:00,mem=2G --convert no %s' %(lines, script)
     #print cmd 
     os.system(cmd)
 
@@ -95,13 +95,18 @@ def main():
     #except:
     #    usage()
     #    sys.exit(2)
-    
-    outdir = 'CAAS_1'
+   
+    if not args.output:
+        args.output = 'CAAS_1' 
+    outdir = args.output
     if not os.path.exists(outdir):
         os.mkdir(outdir)
-    read_link('rice_line_CAAS_534.download.list', outdir)
+    #read_link('rice_line_CAAS_534.download.list', outdir)
+    #read_link('rice_line_CAAS_534.other0.download.list', outdir)
+    #read_link('rice_line_CAAS_534.other1.download.list', outdir)
+    read_link('redo.download.list', outdir)
     #runjob('down.sh', 100) #more than 1000 jobs
-    runjob('down.sh', 10) #100 jobs
+    runjob('down.sh', 5) #100 jobs
 
 if __name__ == '__main__':
     main()

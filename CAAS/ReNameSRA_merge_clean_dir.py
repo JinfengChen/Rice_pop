@@ -87,7 +87,7 @@ def main():
         sys.exit(2)
     
     if not args.list:
-        args.list = '../GigaScience/rice_line_IRRI_2466.download.list'
+        args.list = 'rice_line_CAAS_534.download.list'
     if not args.output:
         args.output = args.input
 
@@ -114,12 +114,13 @@ def main():
         fq2gz  = '%s/%s_2.fastq.gz' %(dirout, prefix)
         acc_dir[acc] = dirname
         acc_sra[acc] += 1
+        print '%s\t%s' %(fq1gz, fq2gz)
         if os.path.isfile(fq1gz) and os.path.getsize(fq1gz) > 0 and os.path.isfile(fq2gz) and os.path.getsize(fq2gz) > 0:
             acc_fq[acc] += 1
     for acc in sorted(acc_sra.keys()):
-        #print '%s %s' %(acc_sra[acc], acc_fq[acc])
+        print '%s %s' %(acc_sra[acc], acc_fq[acc])
         if acc_sra[acc] == acc_fq[acc] and not acc == '':
-            cmd = 'rm %s/*.sra' %(acc_dir[acc])
+            cmd = 'rm -R %s' %(acc_dir[acc])
             print >> ofile, cmd
     ofile.close()
     #runjob('dump.sh', 3) 

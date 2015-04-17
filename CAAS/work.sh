@@ -16,3 +16,35 @@ echo "summary"
 python ReNameSRA_sumcall.py --input Japonica_fastq_RelocaTEi_mPing --list rice_line_CAAS_534.download.list > Japonica_fastq_RelocaTEi_mPing.summary
 python ReNameSRA_sumcall.py --input Japonica_fastq_RelocaTEi_Pong --list rice_line_CAAS_534.download.list > Japonica_fastq_RelocaTEi_Pong.summary
 
+
+echo "other strain, not japonica"
+python ReNameSRA_subset_others.py
+python ReNameSRA_down.py --output Other_fastq > log 2> log2 &
+python ReNameSRA_merge.py --input Other_fastq > log 2> log2 &
+python ReNameSRA_merge_clean.py --input ./Other_fastq
+bash clean.sh
+python ReNameSRA_RelocaTEi.py --input Other_fastq > log 2> log2 &
+python ReNameSRA_sumcall.py --input Other_fastq_RelocaTEi --list ../GigaScience/rice_line_CAAS_534.download.list > Other_fastq_RelocaTEi_other_mPing0.summary
+python ReNameSRA_RelocaTEi.py --input Other_fastq --repeat /rhome/cjinfeng/BigData/00.RD/RelocaTE_i/Simulation/Reference/pong.fa > log 2> log2 &
+python ReNameSRA_RelocaTEi.py --input Other_fastq --repeat /rhome/cjinfeng/BigData/00.RD/RelocaTE_i/Simulation/Reference/ping.fa > log 2> log2 &
+
+echo "redo unfinished, some do not have mPing/Ping/Pong, so no results directory. check flanking_seq directory first when you have list"
+python ReNameSRA_sumcall.py --input Other_fastq_RelocaTEi_mPing --list ../GigaScience/rice_line_CAAS_534.download.list --check 1
+python ReNameSRA_redo.py --input redo.list
+python ReNameSRA_down.py --output Other_fastq1 > log 2> log2 &
+python ReNameSRA_merge.py --input Other_fastq1 > log 2> log2 &
+python ReNameSRA_merge_clean.py --input ./Other_fastq1
+bash clean.sh
+python ReNameSRA_RelocaTEi.py --input Other_fastq > log 2> log2 &
+
+python ReNameSRA_redo.py --input redo.list
+python ReNameSRA_down.py --output Japonica_fastq > log 2> log2 &
+python ReNameSRA_merge.py --input Japonica_fastq > log 2> log2 &
+python ReNameSRA_merge_clean.py --input ./Japonica_fastq
+bash clean.sh
+python ReNameSRA_RelocaTEi.py --input Japonica_fastq > log 2> log2 &
+
+echo "summary, ping and pong not right because of similarity"
+python ReNameSRA_sumcall.py --input Other_fastq_RelocaTEi_mPing --list ../GigaScience/rice_line_CAAS_534.download.list > Other_fastq_RelocaTEi_mPing.summary
+python ReNameSRA_sumcall.py --input Other_fastq_RelocaTEi_Ping --list ../GigaScience/rice_line_CAAS_534.download.list > Other_fastq_RelocaTEi_Ping.summary
+python ReNameSRA_sumcall.py --input Other_fastq_RelocaTEi_Pong --list ../GigaScience/rice_line_CAAS_534.download.list > Other_fastq_RelocaTEi_Pong.summary
