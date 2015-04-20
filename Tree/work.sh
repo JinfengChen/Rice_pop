@@ -20,5 +20,19 @@ qsub -q js run_Build_tree.sh
 
 echo "Anno tree"
 python Anno_Nexus_tree.py --input 3K_coreSNP-v2.1.binary.tab.fasta.fasttree.nomle.nj.tree --format newick --anno rice_line_ALL_3000.anno.list --color bl
+python Anno_Nexus_tree.py --input 3K_coreSNP-v2.1.binary.tab.fasta.fasttree.nj.tree --format newick --anno rice_line_ALL_3000.anno.list --color bl
+
 echo "Draw tree with trait"
 python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.fasta.fasttree.nomle.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --output 3K_coreSNP-v2.1.binary.tab.fasta.fasttree.nomle.nj.tree
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.fasta.fasttree.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --output 3K_coreSNP-v2.1.binary.tab.fasta.fasttree.nj.tree
+
+echo "with landrace tree"
+cat 3K_coreSNP-v2.1.binary.tab.fasta ./vcf_merge/HEG4_EG4_A119_A123_NB_SNPs.noRepeats.selectedSNPs.1_12.fasta > 3K_coreSNP-v2.1.binary.tab.landrace.fasta
+qsub fasttree.sh
+python Anno_Nexus_tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --format newick --anno rice_line_ALL_3000.anno.list --color bl
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --output 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree
+
+echo "sub tree using list of sample"
+cut -f1 rice_line_ALL_3000.anno.list | grep -v "IRIS" | grep -v "Taxa" > rice_line_ALL_3000.CAAS.list
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --sublist rice_line_ALL_3000.CAAS.list
+ 
