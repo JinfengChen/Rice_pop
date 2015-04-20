@@ -31,8 +31,17 @@ cat 3K_coreSNP-v2.1.binary.tab.fasta ./vcf_merge/HEG4_EG4_A119_A123_NB_SNPs.noRe
 qsub fasttree.sh
 python Anno_Nexus_tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --format newick --anno rice_line_ALL_3000.anno.list --color bl
 python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --output 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --output 3K_coreSNP-v2.1.binary.tab.landrace.nj.nolandrace.tree
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.landrace.list --trait 7 --color 2 --output 3K_coreSNP-v2.1.binary.tab.landrace.nj.landrace.tree
+
 
 echo "sub tree using list of sample"
 cut -f1 rice_line_ALL_3000.anno.list | grep -v "IRIS" | grep -v "Taxa" > rice_line_ALL_3000.CAAS.list
 python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --sublist rice_line_ALL_3000.CAAS.list
- 
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.landrace.list --trait 7 --color 2 --sublist rice_line_ALL_3000.CAAS.list --subtitle CAAS.landrace
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --sublist rice_line_ALL_3000.CAAS.list --subtitle CAAS.nolandrace
+
+echo "sub tree using jap"
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.landrace.list --trait 7 --color 2  --subsample jap --subtitle jap.landrace
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --subsample jap --subtitle jap.nolandrace
+

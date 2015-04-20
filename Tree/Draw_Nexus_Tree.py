@@ -149,8 +149,10 @@ for (i in 1:length(edge_num)){
 
 plot(tree, edge.color=edge_colors, show.tip.label = FALSE)
 
-barplot(y,horiz=TRUE,width=1,space=0, xlim=c(-10, 200),  ylim=c(0.5,length(tree$tip.label)),names="", axes=FALSE)
-axis(1, at= c(0, 100, 200), line=1)
+#barplot(y,horiz=TRUE,width=1,space=0, xlim=c(-10, 200),  ylim=c(0.5,length(tree$tip.label)),names="", axes=FALSE)
+#axis(1, at= c(0, 100, 200), line=1)
+barplot(y,horiz=TRUE,width=1,space=0, xlim=c(-10, 600),  ylim=c(0.5,length(tree$tip.label)),names="", axes=FALSE)
+axis(1, at= c(0, 300, 600), line=1)
 dev.off()
 ''' %(intree, sub_anno, sub_tree)
 
@@ -233,8 +235,10 @@ par(xpd=TRUE) #set this legend can be plot into margin area
 legend(x=xrange[2]*0.8, y=yrange[2]*0.99, leg_inf[,2], fill=leg_inf[,1], border=FALSE, bty='n')
 
 par(mar=c(4,0.5, 2, 1)) #set left and right to be tight with other plot
-barplot(y,horiz=TRUE,width=1,space=0, xlim=c(-10, 200),  ylim=c(0.5,length(tree$tip.label)),names="", axes=FALSE)
-axis(1, at= c(0, 100, 200), line=1)
+#barplot(y,horiz=TRUE,width=1,space=0, xlim=c(-10, 200),  ylim=c(0.5,length(tree$tip.label)),names="", axes=FALSE)
+#axis(1, at= c(0, 100, 200), line=1)
+barplot(y,horiz=TRUE,width=1,space=0, xlim=c(-10, 600),  ylim=c(0.5,length(tree$tip.label)),names="", axes=FALSE)
+axis(1, at= c(0, 300, 600), line=1)
 dev.off()
 ''' %(newick, anno, col, color, prefix, tip)
 
@@ -275,9 +279,11 @@ def main():
     sample    = args.subsample
     if args.subsample:
         #pass
-        sub_tree_file = '%s.%s.tree' %(tree_file, sample)
-        sub_anno_file = '%s.%s.anno' %(tree_file, sample)
-        sub_prefix    = '%s.%s' %(tree_file, sample)
+        if not args.subtitle:
+            args.subtitle = sample
+        sub_tree_file = '%s.%s.tree' %(tree_file, args.subtitle)
+        sub_anno_file = '%s.%s.anno' %(tree_file, args.subtitle)
+        sub_prefix    = '%s.%s' %(tree_file, args.subtitle)
         retain_ids = sub_anno(anno_file, sample, sub_anno_file)
         sub_tree(tree_file, retain_ids, sub_tree_file)
         #sub_tree_ape(tree_file, sub_anno_file, sub_tree_file, sub_prefix)
