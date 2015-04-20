@@ -48,6 +48,14 @@ def readtable_1A(infile, group_color, mode):
                 sample_name = re.sub(r'\'', '', sample_name)
                 origin      = unit[6] if not unit[6] == '' else 'NA'
                 group       = unit[9] if not unit[9] == '' else 'NA'
+                if group == 'japonica':
+                    group = 'Japonica'
+                elif group == 'Intermediate type':
+                    group = 'Intermediate'
+                elif group == 'Temperate japonica':
+                    group = 'Temperate jap'
+                elif group == 'Tropical japonica':
+                    group = 'Tropical jap'           
                 color       = group_color[group] if group_color.has_key(group) else 'black'
                 data[unit[2]] = [color, sample_name, origin, group]
                 #for ln in sorted(sample2sra[unit[10]].keys()):
@@ -70,6 +78,18 @@ def readtable_1B(infile, group_color):
                 sample_name = re.sub(r'\'', '', sample_name)
                 origin      = unit[5] if not unit[5] == '' else 'NA'
                 group       = unit[7] if not unit[7] == '' else 'NA'
+                if group == 'japonica':
+                    group = 'Japonica'
+                elif group == 'Intermediate type':
+                    group = 'Intermediate'
+                elif group == 'Aus':
+                    group = 'Aus/boro'
+                elif group[:8] == 'Aromatic':
+                    group = 'Basmati/sadri' 
+                elif group == 'Temperate japonica':
+                    group = 'Temperate jap'
+                elif group == 'Tropical japonica':
+                    group = 'Tropical jap'
                 color       = group_color[group] if group_color.has_key(group) else 'black'
                 data[unit[2]] = [color, sample_name, origin, group]
                 #print unit[0], unit[2], unit[5], unit[7], unit[8]
@@ -120,8 +140,8 @@ def main():
 
     group_color = {
         'Indica'             : 'green',
-        'Temperate japonica' : 'blue',
-        'Tropical japonica'  : 'cornflowerblue',
+        'Temperate jap' : 'blue',
+        'Tropical jap'  : 'cornflowerblue',
         'Japonica'           : 'cyan',
         'Aus/boro'           : 'chocolate',
         'Basmati/sadri'      : 'darkorchid',
@@ -129,8 +149,8 @@ def main():
     }
   
     mping = defaultdict(lambda : int())
-    read_mping('../CAAS/Japonica_fastq_RelocaTEi_mPing.summary', mping, args.mode)
-    read_mping('../IRRI/Japonica_fastq_RelocaTEi_mPing_IRRI_Jap.summary', mping, args.mode)
+    read_mping('../CAAS/Transposon_mPing.CAAS.summary', mping, args.mode)
+    read_mping('../IRRI/Transposon_mPing.IRRI.summary', mping, args.mode)
 
     #sample2sra = readtable_sra('seq_file_mapping_to_SRA.txt')
     irri = readtable_1A('rice_line_metadata_20141029_TableS1A.txt', group_color, args.mode)
