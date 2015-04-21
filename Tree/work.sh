@@ -45,3 +45,8 @@ echo "sub tree using jap"
 python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.landrace.list --trait 7 --color 2  --subsample jap --subtitle jap.landrace
 python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.list --trait 7 --color 2 --subsample jap --subtitle jap.nolandrace
 
+echo "subtree of landrace groups"
+#get number of tips in this groups in figure tree by click on the node
+cat get_subtree_landrace.R | R --slave
+mv subtree.tip rice_line_ALL_3000.landrace_group.list
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.landrace.list --trait 7 --color 2 --sublist rice_line_ALL_3000.landrace_group.list --subtitle landrace_group --showtips TRUE 

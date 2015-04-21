@@ -115,6 +115,7 @@ def sub_tree_ape(intree, sub_anno, sub_tree, prefix):
     R_cmd='''
 library("ape")
 tree = read.tree(file="%s", )
+tree$edge.length[tree$edge.length<0]<-0
 anno = read.table(file="%s", sep='\\t')
 retain_id = anno[,1]
 pruned.tree = drop.tip(tree, tree$tip.label[-match(retain_id, tree$tip.label)])
@@ -182,6 +183,7 @@ def write_R(newick, anno, col, color, prefix, tip):
     R_cmd='''
 library("ape")
 tree = read.tree(file="%s")
+tree$edge.length[tree$edge.length<0]<-0
 x = read.table(file="%s", sep='\\t', header=1)
 y = setNames(x[,%s], x[,1])
 y = y[match(gsub("'", '', tree$tip.label), names(y))]
@@ -199,6 +201,7 @@ dev.off()
         R_cmd='''
 library("ape")
 tree = read.tree(file="%s")
+tree$edge.length[tree$edge.length<0]<-0
 x = read.table(file="%s", sep='\\t', header=1)
 y = setNames(x[,%s], x[,1])
 y = y[match(gsub("'", '', tree$tip.label), names(y))]
@@ -207,7 +210,7 @@ sample_colors = setNames(x[,%s], x[,1])
 sample_colors = sample_colors[match(gsub("'", '', tree$tip.label), names(sample_colors))]
 sample_colors = as.vector(sample_colors)
 
-pdf("%s.pdf")
+pdf("%s.pdf", width=7, height=9)
 layout(matrix(c(1,2),1,2),c(0.7,0.3))
 par(mar=c(4,1,2,4))
 edge_colors=rep("black", length(tree$edge[,2]))
@@ -224,7 +227,7 @@ for (i in 1:length(edge_num)){
      }
 }
 
-plot(tree, edge.color=edge_colors, show.tip.label = %s)
+plot(tree, edge.color=edge_colors, show.tip.label = %s, cex = 0.3, underscore=TRUE)
 leg_inf = cbind(as.vector(x[,2]), as.vector(x[,6]))
 leg_inf = unique(leg_inf)
 leg_inf = leg_inf[order(leg_inf[,2]),]
@@ -239,6 +242,7 @@ par(mar=c(4,0.5, 2, 1)) #set left and right to be tight with other plot
 #axis(1, at= c(0, 100, 200), line=1)
 barplot(y,horiz=TRUE,width=1,space=0, xlim=c(-10, 600),  ylim=c(0.5,length(tree$tip.label)),names="", axes=FALSE)
 axis(1, at= c(0, 300, 600), line=1)
+mtext("mPing", side=1,font=3, at=300,line=3, cex=1, col="black")
 dev.off()
 ''' %(newick, anno, col, color, prefix, tip)
 
