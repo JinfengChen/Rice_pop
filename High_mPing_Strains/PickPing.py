@@ -45,6 +45,11 @@ def parse_support_reads(infile, support_inf):
 def gff_parse(infile, flank_inf, support_inf):
     data = defaultdict(lambda : list())
     r = re.compile(r'\=')
+    ping_gff = re.sub(r'.gff', r'.Ping.gff', infile)
+    print infile
+    print ping_gff
+    ofile = open(ping_gff, 'w')
+    ping_special = 0
     with open (infile, 'r') as filehd:
         for line in filehd: 
             line = line.rstrip()
@@ -75,15 +80,43 @@ def gff_parse(infile, flank_inf, support_inf):
                 repid   = '%s:%s..%s' %(chro, start, end)
                 left_supporting_picks  = check_supporting_reads(support_inf[repid]['Left_supporting_reads'], repid, flank_inf)
                 right_supporting_picks = check_supporting_reads(support_inf[repid]['Right_supporting_reads'], repid, flank_inf)
-                if len(left_supporting_picks[repid]) > 0 and len(right_supporting_picks[repid]) > 0:
-                    print 'Find Pong: %s' %(line)
-                elif len(left_supporting_picks[repid]) > 0 or len(right_supporting_picks[repid]) > 0:
-                    print 'Candidate Pong: %s' %(line) 
+                left_junction_picks  = check_supporting_reads(support_inf[repid]['Left_junction_reads'], repid, flank_inf)
+                right_junction_picks = check_supporting_reads(support_inf[repid]['Right_junction_reads'], repid, flank_inf)
+                #print left_supporting_picks[repid], right_supporting_picks[repid]
+                #print left_junction_picks[repid], right_junction_picks[repid]
+                #print line
+                if len(left_supporting_picks[repid]) + len(left_junction_picks[repid]) > 0 and len(right_supporting_picks[repid]) + len(right_junction_picks[repid]) > 0:
+                    #print 'Find Pong: %s' %(line)
+                    if (chro == 'Chr1' and  start == 38092038) or (chro == 'Chr12' and start == 24587180):
+                        unit[0] = 'Chr1'
+                        unit[3] = '2640500'
+                        unit[4] = '2640502'
+                        line    = '\t'.join(unit)
+                        if ping_special == 0:
+                            print >> ofile, line
+                            ping_special = 1
+                    else:
+                        print >> ofile, line 
+                elif len(left_supporting_picks[repid]) + len(left_junction_picks[repid]) > 0 or len(right_supporting_picks[repid]) + len(right_junction_picks[repid]) > 0:
+                    #print 'Candidate Pong: %s' %(line)
+                    if (chro == 'Chr1' and  start == 38092038) or (chro == 'Chr12' and start == 24587180):
+                        unit[0] = 'Chr1'
+                        unit[3] = '2640500'
+                        unit[4] = '2640502'
+                        line    = '\t'.join(unit)
+                        if ping_special == 0:
+                            print >> ofile, line
+                            ping_special = 1
+                    else:
+                        print >> ofile, line
                 else:
                     pass
+    ofile.close()
     return data
 
-
+##start means that the TE was removed from the start of the read
+##5 means the trimmed end mapps to the 5prime end of the TE
+##3 means the trimmed end mapps to the 3prime end of the TE
 def check_supporting_reads(reads_list, repid, flank_inf):
     data = defaultdict(lambda : list())
     #cover_int_ping = 0
@@ -98,16 +131,30 @@ def check_supporting_reads(reads_list, repid, flank_inf):
             for i in [1, 2]:
                 if not flank_inf[read][str(i)]['pos'] == '':
                     if flank_inf[read][str(i)]['pos'] == 'middle':
-                        if repid == 'Chr1:480846..480848':
-                            print '%s\t%s\t%s\t%s' %(repid, read, flank_inf[read][str(i)]['start'], flank_inf[read][str(i)]['end'])
-                        if int(flank_inf[read][str(i)]['start']) >= start_int+10 and int(flank_inf[read][str(i)]['start']) <= end_int-10:
-                            data[repid].append(read)
-                        elif int(flank_inf[read][str(i)]['end']) >= start_int+10 and int(flank_inf[read][str(i)]['end']) <= end_int-10:
-                            data[repid].append(read)
-                    #elif flank_inf[read][str(i)]['pos'] == 'start' or flank_inf[read][str(i)]['pos'] == 'end':
-                    #    if int(flank_inf[read][str(i)]['end']) == 5: #read mapped to 5primer of TE
-                    #        if int(flank_inf[read][str(i)]['start']) < start_snp or int(flank_inf[read][str(i)]['start']) > start_snp and int(flank_inf[read][str(i)]['mismatch']) == 0:
-                    #            data[repid].append(read)
+                        #if repid == 'Chr1:480846..480848':
+                        #    print '%s\t%s\t%s\t%s' %(repid, read, flank_inf[read][str(i)]['start'], flank_inf[read][str(i)]['end'])
+                        #if int(flank_inf[read][str(i)]['start']) >= start_int+10 and int(flank_inf[read][str(i)]['start']) <= end_int-10:
+                        #    data[repid].append(read)
+                        #elif int(flank_inf[read][str(i)]['end']) >= start_int+10 and int(flank_inf[read][str(i)]['end']) <= end_int-10:
+                        #    data[repid].append(read)
+                        if int(flank_inf[read][str(i)]['start']) >= start_int+5 and int(flank_inf[read][str(i)]['start']) <= end_int-5:
+                             #reads start located in ping specific region
+                             data[repid].append(read)
+                        elif int(flank_inf[read][str(i)]['end']) >= start_int+5 and int(flank_inf[read][str(i)]['end']) <= end_int-5:
+                             #reads end located in ping specific region
+                             data[repid].append(read)
+                        elif int(flank_inf[read][str(i)]['start']) < start_snp and int(flank_inf[read][str(i)]['end']) > start_snp and int(flank_inf[read][str(i)]['mismatch']) == 0:
+                             #reads cover snp
+                             data[repid].append(read)
+                    elif flank_inf[read][str(i)]['pos'] == 'start' or flank_inf[read][str(i)]['pos'] == 'end':
+                        #junction reads
+                        if int(flank_inf[read][str(i)]['end']) == 5: #read mapped to 5primer of TE
+                            if int(flank_inf[read][str(i)]['start']) < start_snp and int(flank_inf[read][str(i)]['end']) > start_snp and int(flank_inf[read][str(i)]['mismatch']) == 0:
+                                #junction reads cover snp 
+                                data[repid].append(read)
+                            elif int(flank_inf[read][str(i)]['end']) < start_snp and int(flank_inf[read][str(i)]['start']) > start_snp and int(flank_inf[read][str(i)]['mismatch']) == 0:
+                                data[repid].append(read)
+                                #junction reads cover snp
         return data
     else:
         return data
