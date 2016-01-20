@@ -26,7 +26,7 @@ def fasta_id(fastafile):
 
 
 def runjob(script, lines):
-    cmd = 'perl /rhome/cjinfeng/software/bin/qsub-pbs.pl --maxjob 30 --lines %s --interval 120 --resource walltime=100:00:00,mem=1G --convert no %s' %(lines, script)
+    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 30 --lines %s --interval 120 --resource walltime=100:00:00,nodes=1:ppn=4,mem=4G --convert no %s' %(lines, script)
     #print cmd 
     os.system(cmd)
 
@@ -98,13 +98,13 @@ def main():
         fq1gz  = '%s/%s_1.fastq.gz' %(dirname, acc)
         fq2gz  = '%s/%s_2.fastq.gz' %(dirname, acc)
         if not os.path.isfile(fq1) and not os.path.isfile(fq1gz):
-            cmd.append('/opt/sratoolkit/2.4.2/bin/fastq-dump --outdir %s --split-files %s' %(dirname, sra))
-            cmd.append('gzip %s' %(fq1))
-            cmd.append('gzip %s' %(fq2))
+            cmd.append('/opt/sratoolkit/2.4.2/bin/fastq-dump --outdir %s --split-files %s' %(dirname, os.path.abspath(sra)))
+            cmd.append('pigz -p 4 %s' %(fq1))
+            cmd.append('pigz -p 4 %s' %(fq2))
             #pass
         elif os.path.isfile(fq1) and not os.path.isfile(fq1gz):
-            cmd.append('gzip %s' %(fq1))
-            cmd.append('gzip %s' %(fq2))
+            cmd.append('pigz -p 4 %s' %(fq1))
+            cmd.append('pigz -p 4 %s' %(fq2))
         print >> ofile, '\n'.join(cmd)
     ofile.close()
     runjob('dump.sh', 12) 

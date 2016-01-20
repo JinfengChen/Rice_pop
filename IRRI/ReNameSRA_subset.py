@@ -10,7 +10,7 @@ from Bio import SeqIO
 def usage():
     test="name"
     message='''
-python CircosConf.py --input circos.config --output pipe.conf
+python ReNameSRA_subset.py --input temperate.mPing.group.id
 
     '''
     print message

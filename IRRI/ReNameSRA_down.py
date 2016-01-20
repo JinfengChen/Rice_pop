@@ -24,7 +24,7 @@ def fasta_id(fastafile):
 
 
 def runjob(script, lines):
-    cmd = 'perl /rhome/cjinfeng/software/bin/qsub-pbs.pl --maxjob 10 --lines %s --interval 120 --resource walltime=100:00:00,mem=2G --convert no %s' %(lines, script)
+    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 15 --lines %s --interval 120 --resource walltime=100:00:00,mem=2G --convert no %s' %(lines, script)
     #print cmd 
     os.system(cmd)
 
@@ -74,9 +74,10 @@ def read_link(infile, outdir):
                 acc     = os.path.abspath('%s/%s' %(outdir, unit[4]))
                 link    = unit[5]
                 sra     = '%s/%s' %(acc, os.path.split(link)[1])
+                fq      = re.sub(r'.sra', r'_1.fastq.gz', sra)
                 if not os.path.exists(acc):
                     os.mkdir(acc)
-                if not os.path.isfile(sra):
+                if not os.path.isfile(sra) and not os.path.isfile(fq):
                     cmd     = '/opt/aspera/3.3.3/bin/ascp -i /opt/aspera/3.3.3/etc/asperaweb_id_dsa.openssh -k 1 -T -l20m %s %s' %(link, acc)
                     print >> ofile, cmd
                     #print >> ofile, sra
@@ -101,15 +102,34 @@ def main():
     if not os.path.exists(outdir):
         os.mkdir(outdir)
     #read_link('temperate.mPing.group.id.download.list', outdir)
-    read_link('temperate.mPing.group.id.other0.download.list', outdir)
+    #read_link('temperate.mPing.group.id.other0.download.list', outdir)
     #read_link('temperate.mPing.group.id.other1.download.list', outdir)
     #read_link('temperate.mPing.group.id.other2.download.list', outdir)
     #read_link('temperate.mPing.group.id.other3.download.list', outdir)
     #read_link('temperate.mPing.group.id.other4.download.list', outdir)
     #read_link('temperate.mPing.group.id.other5.download.list', outdir)
     #read_link('temperate.mPing.group.id.other6.download.list', outdir)
+    #non japonica strains
+    read_link('rice_line_IRRI_2466.other0.download.list', outdir)
+    #read_link('rice_line_IRRI_2466.other1.download.list', outdir)
+    #read_link('rice_line_IRRI_2466.other2.download.list', outdir)
+    #read_link('rice_line_IRRI_2466.other3.download.list', outdir)
+    #read_link('rice_line_IRRI_2466.other4.download.list', outdir)
+    #read_link('rice_line_IRRI_2466.other5.download.list', outdir)
+    #read_link('rice_line_IRRI_2466.other6.download.list', outdir)
+    #read_link('rice_line_IRRI_2466.other7.download.list', outdir)
+    #read_link('rice_line_IRRI_2466.other8.download.list', outdir)
+    #japonica strains
+    #read_link('rice_line_IRRI_2466.Japonica9.download.list', outdir)
+    #read_link('rice_line_IRRI_2466.Japonica10.download.list', outdir)
+    #read_link('rice_line_IRRI_2466.Japonica11.download.list', outdir)
+    #read_link('rice_line_IRRI_2466.Japonica12.download.list', outdir)
+    
+    #read_link('rice_line_IRRI_2466.download.HEG4_group.list', outdir)
+    #read_link('rice_line_IRRI_2466.download.HEG4_temperate.list', outdir)
     #runjob('down.sh', 100) #more than 1000 jobs
-    runjob('down.sh', 5) #100 jobs
+    runjob('down.sh', 20) #more than 1000 jobs
+    #runjob('down.sh', 5) #100 jobs
     #runjob('down.sh', 2) #30 jobs
     
 if __name__ == '__main__':

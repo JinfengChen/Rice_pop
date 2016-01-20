@@ -89,7 +89,7 @@ def main():
     if not args.list:
         args.list = '../GigaScience/rice_line_IRRI_2466.download.list'
     if not args.output:
-        args.output = 'Japonica_fastq'
+        args.output = args.input
 
     if not os.path.exists(args.output):
         os.mkdir(args.output)

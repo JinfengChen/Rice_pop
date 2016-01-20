@@ -21,7 +21,7 @@ Run RelocaTEi for rice strain in Japonica_fastq
 
 
 def runjob(script, lines):
-    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 10 --lines %s --interval 120 --resource nodes=1:ppn=16,walltime=100:00:00,mem=20G --convert no %s' %(lines, script)
+    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 80 --lines %s --interval 120 --resource nodes=1:ppn=1,walltime=100:00:00,mem=10G --convert no %s' %(lines, script)
     #print cmd 
     os.system(cmd)
 
@@ -65,12 +65,13 @@ def main():
         args.genome = '/rhome/cjinfeng/BigData/00.RD/RelocaTE_i/Simulation/Reference/MSU_r7.fa'
   
     if not args.repeat:
-        #args.repeat = '/rhome/cjinfeng/BigData/00.RD/RelocaTE_i/Simulation/Reference/mping.fa'
-        args.repeat = '/rhome/cjinfeng/BigData/00.RD/RelocaTE_i/Simulation/Reference/Rice.TE.short.unique.fa'
+        args.repeat = '/rhome/cjinfeng/BigData/00.RD/RelocaTE_i/Simulation/Reference/mping.fa'
+        #args.repeat = '/rhome/cjinfeng/BigData/00.RD/RelocaTE_i/Simulation/Reference/Rice.TE.short.unique.fa'
 
     #-t ../input/mping_UNK.fa -g /rhome/cjinfeng/HEG4_cjinfeng/seqlib/MSU_r7.fa -d ../input/FC52_7 -e HEG4 -o mPing_HEG4_UNK -r 1 -p 1 -a 1   
     #RelocaTE = 'python /rhome/cjinfeng/software/tools/RelocaTE_1.0.3_i/RelocaTE/scripts/relocaTE.py'
-    RelocaTE = 'python /rhome/cjinfeng/BigData/00.RD/RelocaTE2/scripts/relocaTE.py'
+    #RelocaTE = 'python /rhome/cjinfeng/BigData/00.RD/RelocaTE2/scripts/relocaTE.py'
+    RelocaTE = 'python /rhome/cjinfeng/BigData/00.RD/RelocaTE2_mPing/scripts/relocaTE.py'
     Reference= os.path.abspath(args.genome)
     Repeat   = os.path.abspath(args.repeat)
     project = os.path.split(args.output)[1]
@@ -86,12 +87,11 @@ def main():
         # relocate will not run if there is result exists
         if not os.path.exists(outdir):
         #if 1:
-            #python $relocate --te_fasta $repeat --genome_fasta $genome --fq_dir $fq_d --bam $bam --outdir $outdir --reference_ins $ref_te --sample $strain --size $size --step 1234567 --mismatch 2 --run --cpu $PBS_NP --aligner $aligner --split --verbose 3
-            relocaTE = '%s --te_fasta %s --genome_fasta %s --fq_dir %s --outdir %s --reference_ins %s --size 500 --step 1234567 --mismatch 2 --run --cpu %s --aligner bowtie2 --split --verbose 2' %(RelocaTE, Repeat, Reference, read_dir, outdir, existingTE, cpu)
-            #shell    = 'bash %s/run_these_jobs.sh > %s/run.log 2> %s/run.log2' %(outdir, outdir, outdir)
-            #os.system(relocaTE)
-            print >> ofile, relocaTE
-            #print >> ofile, shell
+            relocaTE = '%s --te_fasta %s --genome_fasta %s --fq_dir %s --outdir %s --reference_ins %s' %(RelocaTE, Repeat, Reference, read_dir, outdir, existingTE)
+            shell    = 'bash %s/run_these_jobs.sh > %s/run.log 2> %s/run.log2' %(outdir, outdir, outdir)
+            os.system(relocaTE)
+            #print >> ofile, relocaTE
+            print >> ofile, shell
     ofile.close()
     runjob('%s.run.sh' %(args.output), 1)
  

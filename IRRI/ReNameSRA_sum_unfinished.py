@@ -94,7 +94,7 @@ def main():
     parser.add_argument('-v', dest='verbose', action='store_true')
     args = parser.parse_args()
     try:
-        len(args.input) > 0 and len(args.list) > 0
+        len(args.input) > 0
     except:
         usage()
         sys.exit(2)
@@ -105,33 +105,38 @@ def main():
     if not args.call: 
         args.call = 'RelocaTEi'
 
-    inf  = parse_inf(args.list, args.call)
-    data = defaultdict(lambda : defaultdict(lambda : list)) 
-    project = os.path.split(args.input)[1]
+    if not args.list:
+        args.list = 'rice_line_CAAS_534.download.list'
+
+    #ofile = open(sum_file, 'w')
+    #print >> ofile, 'Accession\tPing\tmPing_Ref\tmPing_Non_Ref\tName\tOrigin\tClass'
     for call in sorted(os.listdir(args.input)):
         dirname = os.path.abspath('%s/%s' %(args.input, call))
         #print dirname
         if args.call == 'RelocaTE':
             pass
         elif args.call == 'RelocaTEi':
-            non_ref_txt = '%s/repeat/results/ALL.all_nonref_insert.txt' %(dirname)
-            non_ref_gff = '%s/repeat/results/ALL.all_nonref_insert.high_conf.gff' %(dirname)
-            ref_gff     = '%s/repeat/results/ALL.all_ref_insert.gff' %(dirname)
-            if os.path.isfile(non_ref_txt) and not os.path.isfile(non_ref_gff):
-                character   = 'perl /rhome/cjinfeng/BigData/00.RD/RelocaTE_i/scripts_dev/characterizer.pl'
-                genome    = '/rhome/cjinfeng/BigData/00.RD/RelocaTE_i/Simulation/Reference/MSU_r7.fa'
-                samtools  = '/opt/samtools-0.1.16/samtools'
-                cmd = '%s -s %s -b  -g %s --samtools %s' %(character, non_ref_txt, genome, samtools)
-                os.system(cmd)
-            call_nonref = parse_gff(non_ref_gff)
-            call_ref    = parse_gff(ref_gff)
-            call_inf    = inf[call] if inf.has_key(call) else 'NA\tNA\tNA'
-            if int(args.check) == 1 and (not os.path.exists('%s/repeat/results' %(dirname)) or not os.path.getsize(non_ref_gff) > 0):
-                print '%s\t%s\t%s\t%s\tNo output' %(call, call_ref, call_nonref, call_inf)
-            print '%s\t%s\t%s\t%s' %(call, call_ref, call_nonref, call_inf)
+            #cmd_ping    = 'python PickPing.py --input %s' %(dirname)
+            #ping_gff    = '%s/repeat/results/ALL.all_nonref_insert.Ping.gff' %(dirname)
+            #if not os.path.exists(ping_gff):
+            #    os.system(cmd_ping) 
+            #non_ref_gff = '%s/repeat/results/ALL.all_nonref_insert.characTErized.gff' %(dirname)
+            #ref_gff     = '%s/repeat/results/ALL.all_ref_insert.gff' %(dirname)
+            #call_ping   = parse_gff(ping_gff)
+            #call_nonref = parse_gff(non_ref_gff)
+            #call_ref    = parse_gff(ref_gff)
+            #call_inf    = inf[call] if inf.has_key(call) else 'NA\tNA\tNA'
+            if not os.path.exists('%s/repeat/results' %(dirname)):
+                #print >> ofile, '%s\t%s\t%s\t%s\t%s\tNo output' %(call, call_ping, call_ref, call_nonref, call_inf)
+                #os.system('')
+                print dirname
+                remove = 'rm -R %s' %(dirname)
+                os.system(remove)
+            #print >> ofile, '%s\t%s\t%s\t%s\t%s' %(call, call_ping, call_ref, call_nonref, call_inf)
         elif args.call == 'TEMP':
             pass
-  
+    #ofile.close()  
+
 if __name__ == '__main__':
     main()
 
