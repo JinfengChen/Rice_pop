@@ -12,7 +12,8 @@ from Bio import SeqIO
 def usage():
     test="name"
     message='''
-python SumReCall.py --call TEMP --input /rhome/cjinfeng/BigData/00.RD/RelocaTE_i/Simulation/MSU7.Chr4.mPing
+python ReNameSRA_sum_Ping.py --input Other_fastq_RelocaTEi_Ping
+
 Summary RelocatTE call in current direcory using simulation in input directory
 --call: RelocaTE, TEMP or other
 --check: check unfinished job without results directory or non_ref.gff
@@ -94,7 +95,7 @@ def main():
     parser.add_argument('-v', dest='verbose', action='store_true')
     args = parser.parse_args()
     try:
-        len(args.input) > 0 and len(args.list) > 0
+        len(args.input) > 0
     except:
         usage()
         sys.exit(2)
@@ -106,14 +107,14 @@ def main():
         args.call = 'RelocaTEi'
 
     if not args.list:
-        args.list = 'rice_line_CAAS_534.download.list'
+        args.list = '/bigdata/wesslerlab/shared/Rice/Rice_population_sequence/Rice_3000/GigaScience/rice_line_3000.download.list'
 
     inf  = parse_inf(args.list, args.call)
     data = defaultdict(lambda : defaultdict(lambda : list)) 
     project = os.path.split(args.input)[1]
     sum_file = '%s.summary' %(args.input)
     ofile = open(sum_file, 'w')
-    print >> ofile, 'Accession\tPing\tmPing_Ref\tmPing_Non_Ref\tName\tOrigin\tClass'
+    print >> ofile, 'Accession\tPong\tPong_NonRef\tPong_Ref\tName\tOrigin\tClass'
     for call in sorted(os.listdir(args.input)):
         dirname = os.path.abspath('%s/%s' %(args.input, call))
         #print dirname
@@ -121,18 +122,23 @@ def main():
             pass
         elif args.call == 'RelocaTEi':
             cmd_ping    = 'python PickPong.py --input %s' %(dirname)
-            ping_gff    = '%s/repeat/results/ALL.all_nonref_insert.Pong.gff' %(dirname)
+            ping_nonref_gff  = '%s/repeat/results/ALL.all_nonref_insert.Pong.gff' %(dirname)
+            ping_ref_gff     = '%s/repeat/results/ALL.all_ref_insert.Pong.gff' %(dirname)
+            #print 'nonref_gff: %s' %(ping_nonref_gff)
+            #print 'ref_gff: %s' %(ping_ref_gff)
             #if not os.path.exists(ping_gff):
             os.system(cmd_ping) 
-            non_ref_gff = '%s/repeat/results/ALL.all_nonref_insert.characTErized.gff' %(dirname)
+            non_ref_gff = '%s/repeat/results/ALL.all_nonref_insert.gff' %(dirname)
             ref_gff     = '%s/repeat/results/ALL.all_ref_insert.gff' %(dirname)
-            call_ping   = parse_gff(ping_gff)
-            call_nonref = parse_gff(non_ref_gff)
-            call_ref    = parse_gff(ref_gff)
-            call_inf    = inf[call] if inf.has_key(call) else 'NA\tNA\tNA'
+            call_nonref_ping  = parse_gff(ping_nonref_gff)
+            call_ref_ping     = parse_gff(ping_ref_gff)
+            call_ping  = call_nonref_ping + call_ref_ping
+            #call_nonref = parse_gff(non_ref_gff)
+            #call_ref    = parse_gff(ref_gff)
+            call_inf    = inf[call] if inf.has_key(call) else 'NA\tNA\tNA' 
             if int(args.check) == 1 and (not os.path.exists('%s/repeat/results' %(dirname)) or not os.path.getsize(non_ref_gff) > 0):
                 print >> ofile, '%s\t%s\t%s\t%s\t%s\tNo output' %(call, call_ping, call_ref, call_nonref, call_inf)
-            print >> ofile, '%s\t%s\t%s\t%s\t%s' %(call, call_ping, call_ref, call_nonref, call_inf)
+            print >> ofile, '%s\t%s\t%s\t%s\t%s' %(call, call_ping, call_nonref_ping, call_ref_ping, call_inf)
         elif args.call == 'TEMP':
             pass
     ofile.close()  
