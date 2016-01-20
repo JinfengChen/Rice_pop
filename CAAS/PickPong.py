@@ -45,8 +45,8 @@ def parse_support_reads(infile, support_inf):
 def gff_parse(infile, flank_inf, support_inf):
     data = defaultdict(lambda : list())
     r = re.compile(r'\=')
-    ping_gff = re.sub(r'.gff', r'.Ping.gff', infile)
-    ping_log = re.sub(r'.gff', r'.Ping.inf', infile)
+    ping_gff = re.sub(r'.gff', r'.Pong.gff', infile)
+    ping_log = re.sub(r'.gff', r'.Pong.inf', infile)
     #print infile
     #print ping_gff
     ofile = open(ping_gff, 'w')
@@ -80,7 +80,7 @@ def gff_parse(infile, flank_inf, support_inf):
                 #print '%s\t%s\t%s\t%s\t%s\t%s' %(repid, chro, start, end, repname, repfam)
                 #print '%s\t%s\t%s' %(chro, start, end)
                 repid   = '%s:%s..%s' %(chro, start, end)
-                print >> ofile_log, 'Ping: %s' %(repid)
+                print >> ofile_log, 'Pong: %s' %(repid)
                 left_supporting_picks  = check_supporting_reads(support_inf[repid]['Left_supporting_reads'], repid, flank_inf, ofile_log)
                 right_supporting_picks = check_supporting_reads(support_inf[repid]['Right_supporting_reads'], repid, flank_inf, ofile_log)
                 left_junction_picks  = check_supporting_reads(support_inf[repid]['Left_junction_reads'], repid, flank_inf, ofile_log)
@@ -124,12 +124,12 @@ def gff_parse(infile, flank_inf, support_inf):
 def check_supporting_reads(reads_list, repid, flank_inf, ofile_log):
     data = defaultdict(lambda : list())
     #cover_int_ping = 0
-    #start_int      = 23    #253 for Ping
-    #end_int        = 5300  #5164 for Ping
-    #start_snp      = 17    #16 for Ping
-    start_int      = 253
-    end_int        = 5164
-    start_snp      = 16
+    start_int      = 23    #253 for Ping
+    end_int        = 5320  #5164 for Ping
+    start_snp      = 17    #16 for Ping
+    #start_int      = 253
+    #end_int        = 5164
+    #start_snp      = 16
     if len(reads_list) > 0:
         for read in reads_list:
             for i in [1, 2]:
@@ -150,7 +150,7 @@ def check_supporting_reads(reads_list, repid, flank_inf, ofile_log):
                         #     data[repid].append(read)
                         #     print >> ofile_log, 'Midlle reads: %s' %(read)
                         flank = 5
-                        if int(flank_inf[read][str(i)]['start']) >= start_int+flank and int(flank_inf[read][str(i)]['start']) <= end_int-flank and int(flank_inf[read][str(i)]['end']) >= start_int+flank and int(flank_inf[read][str(i)]['end']) <= end_int-flank:
+                        if int(flank_inf[read][str(i)]['start']) >= start_int+flank and int(flank_inf[read][str(i)]['start']) <= end_int-flank and int(flank_inf[read][str(i)]['end']) >= start_int+flank and int(flank_inf[read][str(i)]['end']) <= end_int-flank and int(flank_inf[read][str(i)]['mismatch']) <= 1:
                              data[repid].append(read)
                              print >> ofile_log, 'Midlle reads: %s' %(read)
                     #    elif int(flank_inf[read][str(i)]['start']) < start_snp - 10 and int(flank_inf[read][str(i)]['end']) > start_snp + 10 and int(flank_inf[read][str(i)]['mismatch']) == 0:
