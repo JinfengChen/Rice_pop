@@ -248,6 +248,66 @@ def parse_flanking_fastq(fastq_file, flank_inf):
                 else:
                     pass
 
+def setping():
+    pong_dict = defaultdict(lambda : defaultdict(lambda : str()))
+    #pong['Chr11']['11436715']['direction'] = 'left'
+    #pong['Chr11']['11441880']['direction'] = 'right'
+    pongs = ['Chr6:23521641..23526981']
+    r = re.compile(r'(\w+):(\d+)\.\.(\d+)')
+    for p in pongs:
+        if r.search(p):
+            chro  = r.search(p).groups(0)[0]
+            start = r.search(p).groups(0)[1]
+            end   = r.search(p).groups(0)[2]
+            pong_dict['%s:%s' %(chro, start)]['direction'] = 'left'
+            pong_dict['%s:%s' %(chro, end)]['direction']   = 'right'
+            pong_dict['%s:%s' %(chro, start)]['loci']      = p
+            pong_dict['%s:%s' %(chro, end)]['loci']        = p
+            pong_dict['%s:%s' %(chro, start)]['loci_i']    = [chro, start, end]
+            pong_dict['%s:%s' %(chro, end)]['loci_i']      = [chro, start, end]
+    return pong_dict 
+
+#parse ref or shared pong, only keep these known reference pong loci
+#Japonica_fastq_RelocaTEi_Pong/ERS470370_RelocaTEi/repeat/results/ALL.all_nonref_insert.gff
+#Chr1    not.give        RelocaTE_i      480846  480848  .       -       .       ID=repeat_Chr1_480846_480848;TSD=TTA;Note=Non-reference, not found in reference;
+#Right_junction_reads:2;Left_junction_reads:1;Right_support_reads:0;Left_support_reads:0;
+def ref_gff_parse(infile, pong_NB, pong_gff):
+    data = defaultdict(lambda : str())
+    r = re.compile(r'\=')
+    #print infile
+    #print ping_gff
+    with open (infile, 'r') as filehd:
+        for line in filehd: 
+            line = line.rstrip()
+            if len(line) > 2 and not line.startswith('#'): 
+                unit  = re.split(r'\t',line)
+                start = int(unit[3]) 
+                end   = int(unit[4])
+                chro  = unit[0]
+                strand= unit[6]
+                temp  = defaultdict(str)
+                attrs = re.split(r';', unit[8])
+                for attr in attrs:
+                    #print attr
+                    if not attr == '':
+                        #print 'yes'
+                        if r.search(attr):
+                            idx, value = re.split(r'\=', attr)
+                            temp[idx] = value
+                        else:
+                            idx, value = re.split(r'\:', attr)
+                            temp[idx] = value
+                Rjun    = temp['Right_junction_reads']
+                Rsup    = temp['Right_support_reads']
+                Ljun    = temp['Left_junction_reads']
+                Lsup    = temp['Left_support_reads']
+                if pong_NB.has_key('%s:%s' %(chro, start)) and pong_NB.has_key('%s:%s' %(chro, end)):
+                    data[pong_NB['%s:%s' %(chro, start)]['loci']] = line
+    ofile = open(pong_gff, 'w')
+    for pong in sorted(data.keys()):
+        print >> ofile, data[pong]
+    ofile.close()
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input')
@@ -290,6 +350,13 @@ def main():
     support_reads = glob.glob('%s/repeat/results/Chr*.repeat.reads.list' %(args.input)) 
     for sread in support_reads:
         parse_support_reads(sread, support_inf)
+
+    ping_NB = setping()
+    #parse ref.gff and check with reference pong if exists
+    ref_gff='%s/repeat/results/ALL.all_ref_insert.gff' %(args.input)
+    ref_ping_gff = '%s/repeat/results/ALL.all_ref_insert.Ping.gff' %(args.input)
+    if os.path.isfile(ref_gff):
+        ref_gff_parse(ref_gff, ping_NB, ref_ping_gff) 
  
     #parse gff file and check junction reads and supporting reads if they cover mPing/Ping/Pong difference area
     all_gff='%s/repeat/results/ALL.all_nonref_insert.gff' %(args.input)

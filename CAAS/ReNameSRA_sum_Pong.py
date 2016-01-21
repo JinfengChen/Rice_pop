@@ -124,8 +124,6 @@ def main():
             cmd_ping    = 'python PickPong.py --input %s' %(dirname)
             ping_nonref_gff  = '%s/repeat/results/ALL.all_nonref_insert.Pong.gff' %(dirname)
             ping_ref_gff     = '%s/repeat/results/ALL.all_ref_insert.Pong.gff' %(dirname)
-            #print 'nonref_gff: %s' %(ping_nonref_gff)
-            #print 'ref_gff: %s' %(ping_ref_gff)
             #if not os.path.exists(ping_gff):
             os.system(cmd_ping) 
             non_ref_gff = '%s/repeat/results/ALL.all_nonref_insert.gff' %(dirname)
