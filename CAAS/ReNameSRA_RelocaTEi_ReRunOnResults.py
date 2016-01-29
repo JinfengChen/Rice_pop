@@ -52,6 +52,7 @@ def rerun_shell(outfile, script, topdir):
         script_list[3] = 'Chr%s' %(i)
         cmd = ' '.join(script_list)
         cmd = re.sub(r'.RepeatMasker.out', r'.mPing.RepeatMasker.out', cmd)
+        cmd = re.sub(r'/shared/wesslerlab/', r'/bigdata/wesslerlab/shared/', cmd)
         print >> ofile, cmd
     print >> ofile, 'cat %s/repeat/results/*.all_ref_insert.txt > %s/repeat/results/ALL.all_ref_insert.txt' %(topdir, topdir)
     print >> ofile, 'cat %s/repeat/results/*.all_ref_insert.gff > %s/repeat/results/ALL.all_ref_insert.gff' %(topdir, topdir)
@@ -108,7 +109,7 @@ def main():
             #print >> ofile, relocaTE
             print >> ofile, shell
     ofile.close()
-    runjob('%s.run.sh' %(args.output), 1)
+    runjob('%s.run.sh' %(args.output), 20)
  
 if __name__ == '__main__':
     main()

@@ -84,3 +84,28 @@ python ReNameSRA_RelocaTEi_mPing.py --input Other_fastq --repeat /rhome/cjinfeng
 python ReNameSRA_RelocaTEi.py --input Other_fastq > log 2>&1 &
 python ReNameSRA_sum_unfinished.py --input Other_fastq_RelocaTEi
 
+#other, quick run
+python ReNameSRA_down.py --output Other_fastq_S > log 2>&1 &
+python ReNameSRA_merge.py --input Other_fastq_S > log 2>&1 &
+python ReNameSRA_merge_clean.py --input Other_fastq_S > log 2>&1 &
+python ReNameSRA_RelocaTEi_mPing.py --input Other_fastq_S --repeat /rhome/cjinfeng/BigData/00.RD/RelocaTE_i/Simulation/Reference/mping.fa > log 2>&1
+python ReNameSRA_RelocaTEi_mPing.py --input Other_fastq_S --repeat /rhome/cjinfeng/BigData/00.RD/RelocaTE_i/Simulation/Reference/ping.fa > log 2>&1
+python ReNameSRA_RelocaTEi_mPing.py --input Other_fastq_S --repeat /rhome/cjinfeng/BigData/00.RD/RelocaTE_i/Simulation/Reference/pong.fa > log 2>&1
+python ReNameSRA_RelocaTEi.py --input Other_fastq_S > log 2>&1 &
+python ReNameSRA_sum_unfinished.py --input Other_fastq_S_RelocaTEi
+
+
+echo "strain number in japonica and others: 2466=694jap+1772other"
+cut -f5 rice_line_IRRI_2466.Japonica.download.list | uniq | sort | uniq | wc -l
+#694
+cut -f5 rice_line_IRRI_2466.other.download.list | uniq | sort | uniq | wc -l
+#other strain=1772
+echo "clean japonica results"
+python Clean_Japonica_RelocaTEi.py --input Transposon_mPing_Ping_Pong/Japonica_fastq_RelocaTEi_Ping/
+python Clean_Japonica_RelocaTEi.py --input Transposon_mPing_Ping_Pong/Japonica_fastq_RelocaTEi_mPing/
+python Clean_Japonica_RelocaTEi.py --input Transposon_mPing_Ping_Pong/Japonica_fastq_RelocaTEi_Pong/
+
+echo "summary ping"
+python ReNameSRA_sum_Ping.py --input Transposon_mPing_Ping_Pong/Japonica_fastq_RelocaTEi_Ping --list rice_line_IRRI_2466.download.list
+python ReNameSRA_sum_Pong.py --input Transposon_mPing_Ping_Pong/Japonica_fastq_RelocaTEi_Pong --list rice_line_IRRI_2466.download.list
+

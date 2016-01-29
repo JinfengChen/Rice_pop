@@ -26,7 +26,7 @@ def fasta_id(fastafile):
 
 
 def runjob(script, lines):
-    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 30 --lines %s --interval 120 --resource walltime=100:00:00,nodes=1:ppn=4,mem=4G --convert no %s' %(lines, script)
+    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 50 --lines %s --interval 120 --resource walltime=100:00:00,nodes=1:ppn=4,mem=4G --convert no %s' %(lines, script)
     #print cmd 
     os.system(cmd)
 

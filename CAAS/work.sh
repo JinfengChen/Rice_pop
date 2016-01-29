@@ -65,6 +65,11 @@ python ReNameSRA_sum_Ping.py --input Transposon_mPing_Ping_Pong_relocate/Transpo
 python ReNameSRA_sum_Ping.py --input Transposon_mPing_Ping_Pong_relocate/Transposon_mPing_Ping_Pong/Other_fastq_RelocaTEi_Ping --list ../GigaScience/rice_line_CAAS_534.download.list
 cat Transposon_mPing_Ping_Pong_relocate/Transposon_mPing_Ping_Pong/Japonica_fastq_RelocaTEi_Ping.summary Transposon_mPing_Ping_Pong_relocate/Transposon_mPing_Ping_Pong/Other_fastq_RelocaTEi_Ping.summary | sort > Transposon_mPing_Ping_Pong.summary.jinfeng
 paste Transposon_mPing_Ping_Pong.summary.jinfeng Transposon_mPing_Ping_Pong.summary.lulu | cut -f1,2,8,15 | wc -l
+paste Transposon_mPing_Ping_Pong.summary.jinfeng Transposon_mPing_Ping_Pong.summary.lulu | cut -f1,2,7,8,15 | awk -F"\t" '$2!=$5'| less -S
+paste Transposon_mPing_Ping_Pong.summary.jinfeng.new Transposon_mPing_Ping_Pong.summary.jinfeng.mping | sort -k2n | head -n 1 > Transposon_mPing_Ping_Pong.summary.jinfeng.high_ping
+paste Transposon_mPing_Ping_Pong.summary.jinfeng.new Transposon_mPing_Ping_Pong.summary.jinfeng.mping | sort -k2n | tail -n 6 >> Transposon_mPing_Ping_Pong.summary.jinfeng.high_ping
+paste Transposon_mPing_Ping_Pong.summary.jinfeng.new Transposon_mPing_Ping_Pong.summary.jinfeng.mping | cut -f1-2,9-13 > Transposon_mPing_Ping_Pong.summary.jinfeng.high_mping
+
 #pong
 python ReNameSRA_sum_Pong.py --input Transposon_mPing_Ping_Pong_relocate/Transposon_mPing_Ping_Pong/Japonica_fastq_RelocaTEi_Pong --list ../GigaScience/rice_line_CAAS_534.download.list
 python ReNameSRA_sum_Pong.py --input Transposon_mPing_Ping_Pong_relocate/Transposon_mPing_Ping_Pong/Other_fastq_RelocaTEi_Pong --list ../GigaScience/rice_line_CAAS_534.download.list

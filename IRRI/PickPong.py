@@ -42,11 +42,12 @@ def parse_support_reads(infile, support_inf):
 #Japonica_fastq_RelocaTEi_Pong/ERS470370_RelocaTEi/repeat/results/ALL.all_nonref_insert.gff
 #Chr1    not.give        RelocaTE_i      480846  480848  .       -       .       ID=repeat_Chr1_480846_480848;TSD=TTA;Note=Non-reference, not found in reference;
 #Right_junction_reads:2;Left_junction_reads:1;Right_support_reads:0;Left_support_reads:0;
-def gff_parse(infile, flank_inf, support_inf):
+def gff_parse(infile, flank_inf, support_inf, pong_NB, ref_pong_gff):
+    pong_evidence = defaultdict(lambda : defaultdict(lambda : list()))
     data = defaultdict(lambda : list())
     r = re.compile(r'\=')
-    ping_gff = re.sub(r'.gff', r'.Ping.gff', infile)
-    ping_log = re.sub(r'.gff', r'.Ping.inf', infile)
+    ping_gff = re.sub(r'.gff', r'.Pong.gff', infile)
+    ping_log = re.sub(r'.gff', r'.Pong.inf', infile)
     #print infile
     #print ping_gff
     ofile = open(ping_gff, 'w')
@@ -73,14 +74,30 @@ def gff_parse(infile, flank_inf, support_inf):
                         else:
                             idx, value = re.split(r'\:', attr)
                             temp[idx] = value
-                Rjun    = temp['Right_junction_reads']
-                Rsup    = temp['Right_support_reads']
-                Ljun    = temp['Left_junction_reads']
-                Lsup    = temp['Left_support_reads']
+                Rjun    = int(temp['Right_junction_reads'])
+                Rsup    = int(temp['Right_support_reads'])
+                Ljun    = int(temp['Left_junction_reads'])
+                Lsup    = int(temp['Left_support_reads'])
+#####################ref pong
+                if pong_NB.has_key('%s:%s' %(chro, start)):
+                    #print 'left: %s' %(line)
+                    pong_evidence[pong_NB['%s:%s' %(chro, start)]['loci']][pong_NB['%s:%s' %(chro, start)]['direction']] = [Rjun, Ljun, Rsup, Lsup]
+                    pong_evidence[pong_NB['%s:%s' %(chro, start)]['loci']]['strand'] = [strand]
+                    pong_evidence[pong_NB['%s:%s' %(chro, start)]['loci']]['inf']    = pong_NB['%s:%s' %(chro, start)]['loci_i']
+                    #print 'left', pong_evidence[pong_NB['%s:%s' %(chro, start)]['loci']]['left']
+                    continue
+                elif pong_NB.has_key('%s:%s' %(chro, start-1)):
+                    #print 'right: %s' %(line)
+                    pong_evidence[pong_NB['%s:%s' %(chro, start-1)]['loci']][pong_NB['%s:%s' %(chro, start-1)]['direction']] = [Rjun, Ljun, Rsup, Lsup]
+                    pong_evidence[pong_NB['%s:%s' %(chro, start-1)]['loci']]['strand'] = strand
+                    pong_evidence[pong_NB['%s:%s' %(chro, start-1)]['loci']]['inf']    = pong_NB['%s:%s' %(chro, start-1)]['loci_i']
+                    #print 'right', pong_evidence[pong_NB['%s:%s' %(chro, start-1)]['loci']]['right']
+                    continue
+#####################ref pong
                 #print '%s\t%s\t%s\t%s\t%s\t%s' %(repid, chro, start, end, repname, repfam)
                 #print '%s\t%s\t%s' %(chro, start, end)
                 repid   = '%s:%s..%s' %(chro, start, end)
-                print >> ofile_log, 'Ping: %s' %(repid)
+                print >> ofile_log, 'Pong: %s' %(repid)
                 left_supporting_picks  = check_supporting_reads(support_inf[repid]['Left_supporting_reads'], repid, flank_inf, ofile_log)
                 right_supporting_picks = check_supporting_reads(support_inf[repid]['Right_supporting_reads'], repid, flank_inf, ofile_log)
                 left_junction_picks  = check_supporting_reads(support_inf[repid]['Left_junction_reads'], repid, flank_inf, ofile_log)
@@ -116,7 +133,33 @@ def gff_parse(infile, flank_inf, support_inf):
                     pass
     ofile.close()
     ofile_log.close()
+###############ref pong
+    ofile = open(ref_pong_gff, 'a')
+    for pong in sorted(pong_evidence.keys()):
+        support = [0,0,0,0]
+        #print pong
+        if pong_evidence[pong].has_key('left'):
+            support[0] += pong_evidence[pong]['left'][0]
+            support[1] += pong_evidence[pong]['left'][1]
+            support[2] += pong_evidence[pong]['left'][2]
+            support[3] += pong_evidence[pong]['left'][3]
+            #print 'left', support
+        if pong_evidence[pong].has_key('right'):
+            support[0] += pong_evidence[pong]['right'][0]
+            support[1] += pong_evidence[pong]['right'][1]
+            support[2] += pong_evidence[pong]['right'][2]          
+            support[3] += pong_evidence[pong]['right'][3]
+            #print 'right', support
+        chro, start, end = pong_evidence[pong]['inf']
+        strand = pong_evidence[pong]['strand']
+        pong_inf = '%s\tnot.give\tRelocaTE_i\t%s\t%s\t.\t%s\t.\tID=repeat_%s_%s_%s;TSD=TSD;Note=Shared, in ref and reads;Right_junction_reads:%s;Left_junction_reads:%s;Right_support_reads:%s;Left_support_reads:%s;' %(chro, start, end, strand, chro, start, end, support[0], support[1], support[2], support[3]) 
+        print >> ofile, pong_inf
+    ofile.close()
+###################ref pong
     return data
+#Chr6    not.give        RelocaTE_i      12415640        12425974        .       -       .       ID=repeat_Chr6_12415640_12425974;TSD=TSD;Note=Shared, in ref and reads;Right_junction_reads:5;Left_junction_reads:1;Right_support_reads:11;
+
+
 
 ##start means that the TE was removed from the start of the read
 ##5 means the trimmed end mapps to the 5prime end of the TE
@@ -124,12 +167,12 @@ def gff_parse(infile, flank_inf, support_inf):
 def check_supporting_reads(reads_list, repid, flank_inf, ofile_log):
     data = defaultdict(lambda : list())
     #cover_int_ping = 0
-    #start_int      = 23    #253 for Ping
-    #end_int        = 5300  #5164 for Ping
-    #start_snp      = 17    #16 for Ping
-    start_int      = 253
-    end_int        = 5164
-    start_snp      = 16
+    start_int      = 23    #253 for Ping
+    end_int        = 5320  #5164 for Ping
+    start_snp      = 17    #16 for Ping
+    #start_int      = 253
+    #end_int        = 5164
+    #start_snp      = 16
     if len(reads_list) > 0:
         for read in reads_list:
             for i in [1, 2]:
@@ -150,7 +193,7 @@ def check_supporting_reads(reads_list, repid, flank_inf, ofile_log):
                         #     data[repid].append(read)
                         #     print >> ofile_log, 'Midlle reads: %s' %(read)
                         flank = 5
-                        if int(flank_inf[read][str(i)]['start']) >= start_int+flank and int(flank_inf[read][str(i)]['start']) <= end_int-flank and int(flank_inf[read][str(i)]['end']) >= start_int+flank and int(flank_inf[read][str(i)]['end']) <= end_int-flank:
+                        if int(flank_inf[read][str(i)]['start']) >= start_int+flank and int(flank_inf[read][str(i)]['start']) <= end_int-flank and int(flank_inf[read][str(i)]['end']) >= start_int+flank and int(flank_inf[read][str(i)]['end']) <= end_int-flank and int(flank_inf[read][str(i)]['mismatch']) <= 1:
                              data[repid].append(read)
                              print >> ofile_log, 'Midlle reads: %s' %(read)
                     #    elif int(flank_inf[read][str(i)]['start']) < start_snp - 10 and int(flank_inf[read][str(i)]['end']) > start_snp + 10 and int(flank_inf[read][str(i)]['mismatch']) == 0:
@@ -182,10 +225,14 @@ def parse_blatout(blat_file, flank_inf):
         lib_t = r.search(blat_file).groups(0)[1]
     #print 'blatout', lib_n, lib_t
     ##align_file
+    count = 0
     with open (blat_file, 'r') as filehd:
-        for i in range(5):
-            next(filehd)
+        #for i in range(5):
+        #    next(filehd)
         for line in filehd:
+            count += 1
+            if count <= 5:
+                continue
             line = line.rstrip()
             unit = re.split(r'\t',line)
             match    = int(unit[0])
@@ -248,11 +295,11 @@ def parse_flanking_fastq(fastq_file, flank_inf):
                 else:
                     pass
 
-def setping():
+def setpong():
     pong_dict = defaultdict(lambda : defaultdict(lambda : str()))
     #pong['Chr11']['11436715']['direction'] = 'left'
     #pong['Chr11']['11441880']['direction'] = 'right'
-    pongs = ['Chr6:23521641..23526981']
+    pongs = ['Chr11:11436715..11441880', 'Chr2:19904309..19909474', 'Chr6:12415640..12425974', 'Chr6:12415820..12420985', 'Chr6:21720706..21725871', 'Chr9:11302206..11307371']
     r = re.compile(r'(\w+):(\d+)\.\.(\d+)')
     for p in pongs:
         if r.search(p):
@@ -308,6 +355,7 @@ def ref_gff_parse(infile, pong_NB, pong_gff):
         print >> ofile, data[pong]
     ofile.close()
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input')
@@ -351,17 +399,17 @@ def main():
     for sread in support_reads:
         parse_support_reads(sread, support_inf)
 
-    ping_NB = setping()
+    pong_NB = setpong()
     #parse ref.gff and check with reference pong if exists
     ref_gff='%s/repeat/results/ALL.all_ref_insert.gff' %(args.input)
-    ref_ping_gff = '%s/repeat/results/ALL.all_ref_insert.Ping.gff' %(args.input)
+    ref_pong_gff = '%s/repeat/results/ALL.all_ref_insert.Pong.gff' %(args.input)
     if os.path.isfile(ref_gff):
-        ref_gff_parse(ref_gff, ping_NB, ref_ping_gff) 
- 
+        ref_gff_parse(ref_gff, pong_NB, ref_pong_gff) 
+
     #parse gff file and check junction reads and supporting reads if they cover mPing/Ping/Pong difference area
     all_gff='%s/repeat/results/ALL.all_nonref_insert.gff' %(args.input)
     if os.path.isfile(all_gff):
-        gff_parse(all_gff, flank_inf, support_inf)
+        gff_parse(all_gff, flank_inf, support_inf, pong_NB, ref_pong_gff)
 
 if __name__ == '__main__':
     main()

@@ -83,7 +83,7 @@ def main():
     ofile = open('%s.run.sh' %(args.output), 'w')
     for read_dir in sorted(read_dirs):
         outdir = '%s/%s_RelocaTEi' %(os.path.abspath(args.output), os.path.split(read_dir)[1])
-        existingTE  = '%s.RepeatMasker.out' %(Reference)
+        existingTE  = '%s.mPing.RepeatMasker.out' %(Reference)
         # relocate will not run if there is result exists
         if not os.path.exists(outdir):
         #if 1:
