@@ -31,7 +31,7 @@ def fasta_id(fastafile):
 ##INFO=<ID=PR,Number=0,Type=Flag,Description="Provisional reference allele, may not be based on real reference genome">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
-def readvcf(infile, chro, header):
+def readvcf(infile, chro, header, ofile):
     count= 0
     with open (infile, 'r') as filehd:
         for line in filehd:
@@ -71,15 +71,15 @@ def main():
     ofile  = open(temp_vcf, 'w')
     for chro in sorted(chrs, key=int):
         vcf_chr = '%s.%s.vcf' %(args.input, chro)
-        readvcf(vcf_chr, chro, header)
+        readvcf(vcf_chr, chro, header, ofile)
     ofile.close()
     
     #write header of vcf
     ofile = open(temp_head, 'w')
-    print >> ofile, header[chrs[0]][0]
+    print >> ofile, '\n'.join(header[chrs[0]][0])
     for chro in sorted(header.keys(), key=int):
-        print >> ofile, header[chro][1]
-    print >> ofile, header[chrs[0]][2]
+        print >> ofile, header[chro][1][0]
+    print >> ofile, '\n'.join(header[chrs[0]][2])
     ofile.close()
 
     #merge files

@@ -24,13 +24,23 @@ done
 
 echo "merge individual chromosome vcf into one"
 python Merge_Chr_VCF.py --input $prefix.binary
+rm $prefix.binary.temp.*
+
+for chr in {1..12};
+do
+rm $prefix.binary.$chr.vcf $prefix.binary.$chr.log $prefix.binary.$chr.nosex
+done
 
 fi
 
+if [ ! -e $prefix.binary.fasta ]; then
 
-#module load vcftools
-#vcf-to-tab < $prefix.binary.vcf > $prefix.binary.tab
-#perl vcf_tab_to_fasta_alignmentv1.pl -i $prefix.binary.tab > $prefix.binary.tab.pos
+echo "convert vcf to tab and tab to fasta"
+module load vcftools
+vcf-to-tab < $prefix.binary.vcf > $prefix.binary.tab
+perl vcf_tab_to_fasta_alignmentv1.pl -i $prefix.binary.tab > $prefix.binary.tab.pos
+
+fi
 
 echo "Done"
 

@@ -58,9 +58,9 @@ def figtree_color():
         'orange'  : '#C13900',
         'gray'    : '#3F4353',
         'yellow'  : '#FF7C00',
-        'blue'    : '#008BFF',
-        'cornflowerblue'       : '#002681',
-        'cyan'    : '#00A5FF',
+        'blue'    : '#002681',
+        'cornflowerblue'       : '#1A7CD8',
+        'cyan'    : '#48D4FF',
         'chocolate'            : '#833F00',
         'darkorchid'           : '#D66E8C',
         'green'   : '#416214'
