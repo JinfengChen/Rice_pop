@@ -50,3 +50,11 @@ echo "subtree of landrace groups"
 cat get_subtree_landrace.R | R --slave
 mv subtree.tip rice_line_ALL_3000.landrace_group.list
 python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.landrace.list --trait 7 --color 2 --sublist rice_line_ALL_3000.landrace_group.list --subtitle landrace_group --showtips TRUE 
+
+echo "update 20160208 mping, ping and pong"
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.landrace.list --color 2 --trait 7,8,9 --output 3K_coreSNP-v2.1.binary.tab.landrace.nj.landrace.tree_mPing_Ping_Pong
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.landrace.list --color 2 --trait 7,8 --output 3K_coreSNP-v2.1.binary.tab.landrace.nj.landrace.tree_mPing_Ping
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree --anno rice_line_ALL_3000.anno.landrace.list --color 2 --trait 7 --sublist rice_line_ALL_3000.landrace_group.list --subtitle landrace_group --showtips TRUE 
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree.landrace_group.tree --anno 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree.landrace_group.anno --color 2 --trait 7,8,9 --output 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree.landrace_group.tree_mPing_Ping_Pong --showtips TRUE
+python Draw_Nexus_Tree.py --input 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree.landrace_group.tree --anno 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree.landrace_group.anno --color 2 --trait 7,8 --output 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree.landrace_group.tree_mPing_Ping --showtips TRUE
+
