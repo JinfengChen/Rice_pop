@@ -133,8 +133,8 @@ def pong_3k(infile):
                     print >> ofile, '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s' %(down, index, cmd0, cmd1, cmd2, cmd3, cmd4, cmd5, cmd6, cmd7, cmd8)
                     count += 1
     ofile.close()
-    if count > 0:
-        runjob('pong_fastq.sh', 11)
+    #if count > 0:
+        #runjob('pong_fastq.sh', 11)
    
 def main():
     parser = argparse.ArgumentParser()

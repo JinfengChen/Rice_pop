@@ -21,7 +21,7 @@ Run RelocaTEi for rice strain in Japonica_fastq
 
 
 def runjob(script, lines):
-    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 80 --lines %s --interval 120 --resource nodes=1:ppn=1,walltime=100:00:00,mem=10G --convert no %s' %(lines, script)
+    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 80 --lines %s --interval 120 --resource nodes=1:ppn=16,walltime=10:00:00,mem=30G --convert no %s' %(lines, script)
     #print cmd 
     os.system(cmd)
 
@@ -90,7 +90,7 @@ def main():
         # relocate will not run if there is result exists
         if not os.path.exists(outdir):
         #if 1:
-            relocaTE = '%s --te_fasta %s --genome_fasta %s --fq_dir %s --outdir %s --reference_ins %s --sample %s --size 500 --step 1234567 --mismatch 2 --run --cpu %s --aligner blat --verbose 4 --len_cut_match 10 --len_cut_trim 10' %(RelocaTE, Repeat, Reference, read_dir, outdir, existingTE, os.path.split(outdir)[1], cpu)
+            relocaTE = '%s --te_fasta %s --genome_fasta %s --fq_dir %s --outdir %s --reference_ins %s --sample %s --size 500 --step 1234567 --mismatch 2 --run --cpu %s --aligner blat --verbose 4 --len_cut_match 20 --len_cut_trim 20' %(RelocaTE, Repeat, Reference, read_dir, outdir, existingTE, os.path.split(outdir)[1], cpu)
             #shell    = 'bash %s/run_these_jobs.sh > %s/run.log 2> %s/run.log2' %(outdir, outdir, outdir)
             #os.system(relocaTE)
             print >> ofile, relocaTE
