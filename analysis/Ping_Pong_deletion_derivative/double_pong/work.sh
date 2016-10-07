@@ -15,7 +15,7 @@ samtools sort -n A123_Pong.bam A123_Pong.byname
 bedtools bamtofastq -i A123_Pong.byname.bam -fq A123_Pong_1.fq -fq2 A123_Pong_2.fq
 qsub A123.RelocaTEi_Ping.sh
 
-echo "rice 3000"
+echo "rice 3000, pong"
 #prepare fastq
 awk '{print $1":"$4"-"$5}' Pong_2k.gff
 python Rice3k_download_bam_Pong.py --input test.list
@@ -42,4 +42,25 @@ python summary_list_RelocaTE2.py --input Double_Pong.RelocaTE2_call.id
 #File2 only 2
 #Shared 133
 python listdiff2.py Double_Pong.RelocaTE2_call.id.list Double_Pong.id.list
+
+
+echo "rice 3000, ping"
+#prepare fastq
+python Rice3k_download_bam_Ping.py --input test.list
+python Rice3k_download_bam_Ping.py --input rice_line_ALL_3000.anno.list
+python Rice3k_download_bam_Ping_failed.py --input rice_line_ALL_3000.anno.list
+#run RelocaTE2
+python Rice3k_RelocaTE2_Ping.py --input ping_3k
+grep "IRIS" -v ping_3k_RelocaTE2.run.sh > test.run.sh
+grep "IRIS" ping_3k_RelocaTE2.run.sh > test.run1.sh
+perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 80 --lines 5 --interval 120 --resource nodes=1:ppn=16,walltime=10:00:00,mem=30G --convert no test.run.sh > log4 &
+perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 80 --lines 50 --interval 120 --resource nodes=1:ppn=16,walltime=10:00:00,mem=30G --convert no test.run1.sh > log4 &
+#one inseretion in three strains. check if true, ping or mPing?
+cat ping_3k_RelocaTE2/*_RelocaTE2/repeat/results/ALL.all_nonref_insert.gff
+cat ping_3k_RelocaTE2/*_RelocaTE2/repeat/results/ALL.all_nonref_insert.gff > Double_Ping.RelocaTE2_call.gff
+cat ping_3k_RelocaTE2/*_RelocaTE2/repeat/results/ALL.all_nonref_insert.gff | cut -f3 | sed 's/\_ping\_RelocaTE2//' > Double_Ping.RelocaTE2_call.list
+head -n 1 rice_line_ALL_3000.anno.list > Double_Ping.RelocaTE2_call.ping_mPing.table
+grep "B023" rice_line_ALL_3000.anno.list >> Double_Ping.RelocaTE2_call.ping_mPing.table
+grep "IRIS_313-10837" rice_line_ALL_3000.anno.list >> Double_Ping.RelocaTE2_call.ping_mPing.table
+grep "IRIS_313-9890" rice_line_ALL_3000.anno.list >> Double_Ping.RelocaTE2_call.ping_mPing.table
 
