@@ -1,4 +1,4 @@
-
+library("plotrix")
 library("ape")
 tree = read.tree(file="3K_coreSNP-v2.1.binary.tab.landrace.nj.tree")
 tree$edge.length[tree$edge.length<0]<-0
@@ -15,7 +15,7 @@ sample_colors = sample_colors[match(gsub("'", '', tree$tip.label), names(sample_
 sample_colors = as.vector(sample_colors)
 
 pdf("3K_coreSNP-v2.1.binary.tab.landrace.nj.landrace.tree_mPing_Ping_Pong.pdf", width=7, height=9)
-layout(matrix(c(1,2,3,4),1,4),c(0.4, 0.2, 0.2, 0.2))
+layout(matrix(c(1,2,3,4),1,4),c(0.4, 0.3, 0.2, 0.2))
 par(mar=c(4,1,2,4))
 edge_colors=rep("black", length(tree$edge[,2]))
 
@@ -46,9 +46,24 @@ legend(x=xrange[2]*0.6, y=yrange[2]*0.99, leg_inf[,2], fill=leg_inf[,1], border=
 #axis(1, at= c(0, 100, 200), line=1)
 #mping
 par(mar=c(4,0.5, 2, 1)) #set left and right to be tight with other plot
-barplot(y1,horiz=TRUE,width=1,space=0, xlim=c(0, 600),  ylim=c(0.5,length(tree$tip.label)),names="", axes=FALSE)
-axis(1, at= c(0, 300, 600), line=0)
-mtext("mPing", side=1,font=3, at=300,line=2.5, cex=1, col="black")
+cut <- 100
+#new scale 300 to 600 cresponding to 120 and 150. So the factor is 300/30=10
+#new value should be (503-140)/7.5 + 120
+for(i in 1:length(y1)){
+   if (y1[i] > 110){
+       y1[i] <- (y1[i] - cut)/10 + 100
+   }
+} 
+
+xx <- barplot(y1,horiz=TRUE,width=1,space=0, xlim=c(0, 150),  ylim=c(0.5,length(tree$tip.label)),names="", axes=FALSE)
+axis(1, at=c(0, 30, 60, 90, 120, 150), labels=c(0, 30, 60, 90, 300, 600), line=0)
+mtext("mPing", side=1,font=3, at=70,line=2.5, cex=1, col="black")
+#break y
+#break y
+b <- 100
+axis.break(1, b, style="slash")
+rect(b, 0.2, b+2, max(xx)+0.8, border=FALSE, col='white')
+
 #ping
 par(mar=c(4,0.5, 2, 1)) #set left and right to be tight with other plot
 barplot(y2,horiz=TRUE,width=1,space=0, xlim=c(0, 10),  ylim=c(0.5,length(tree$tip.label)),names="", axes=FALSE)
