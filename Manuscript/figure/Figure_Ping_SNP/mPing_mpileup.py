@@ -60,12 +60,12 @@ def main():
         usage()
         sys.exit(2)
 
-    ping = os.path.abspath('ping.fa')
-    relocate2_dirs = glob.glob("%s/*_RelocaTEi" %(args.input))
+    ping = os.path.abspath('mping.fa')
+    relocate2_dirs = glob.glob("%s/*_RelocaTE2" %(args.input))
     ofile = open('run_ping_SNP.sh', 'w')
     for strain_dir in sorted(relocate2_dirs):
         #print >> ofile, strain_dir
-        strain = re.sub(r'_RelocaTEi', r'', os.path.split(strain_dir)[1])
+        strain = re.sub(r'_RelocaTE2', r'', os.path.split(strain_dir)[1])
         #strain = re.sub(r'_RelocaTE2', r'', os.path.split(strain_dir)[1])
         strain_dir = os.path.abspath(strain_dir)
         strain     = os.path.abspath(strain)
@@ -93,18 +93,18 @@ def main():
 
     runjob('run_ping_SNP.sh', 170)
 
-    ofile = open('run_ping_SNP.16th_SNP.summary', 'w')
-    mpileup_files = glob.glob('*.mpileup')
-    for f in sorted(mpileup_files):
-        cmd = "cat %s | awk '{if($2==16){print $5}}'" %(f) 
-        sequence = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read().rstrip()
-        g = count_nucleotides(sequence, 'G')
-        t = count_nucleotides(sequence, 'T')
-        a = count_nucleotides(sequence, 'A')
-        c = count_nucleotides(sequence, 'C')
-        strain = re.sub(r'.mpileup', r'', f)
-        print >> ofile, '%s\t%s\t%s\t%s\t%s' %(strain, g, t, a, c)
-    ofile.close()
+    #ofile = open('run_ping_SNP.16th_SNP.summary', 'w')
+    #mpileup_files = glob.glob('*.mpileup')
+    #for f in sorted(mpileup_files):
+    #    cmd = "cat %s | awk '{if($2==16){print $5}}'" %(f) 
+    #    sequence = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read().rstrip()
+    #    g = count_nucleotides(sequence, 'G')
+    #    t = count_nucleotides(sequence, 'T')
+    #    a = count_nucleotides(sequence, 'A')
+    #    c = count_nucleotides(sequence, 'C')
+    #    strain = re.sub(r'.mpileup', r'', f)
+    #    print >> ofile, '%s\t%s\t%s\t%s\t%s' %(strain, g, t, a, c)
+    #ofile.close()
 
 if __name__ == '__main__':
     main()
