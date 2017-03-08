@@ -80,7 +80,8 @@ def main():
         cmd.append('perl ~/BigData/software/bin/fastaDeal.pl --pat "middle" %s_2.te_repeat.ContainingReads.fa > %s_2.te_repeat.ContainingReads_middle.fa' %(strain, strain))
         cmd.append('cat %s_1.te_repeat.5_3_prime.fa %s_2.te_repeat.5_3_prime.fa %s_1.te_repeat.ContainingReads_middle.fa %s_2.te_repeat.ContainingReads_middle.fa > %s.te_reads.fa' %(strain, strain, strain, strain, strain))
         cmd.append('python ~/BigData/software/bin/fasta2fastq.py %s.te_reads.fa %s.te_reads.fq' %(strain, strain))
-        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa mem %s %s.te_reads.fq > %s.sam' %(ping, strain, strain))
+        cmd.append('python ~/BigData/software/bin/Split_Fastq2SMARTPE.py --input %s.te_reads.fq' %(strain))
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa mem -p %s %s.te_reads_smart.fq > %s.sam' %(ping, strain, strain))
         cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools view -bS -o %s.raw.bam %s.sam' %(strain, strain)) 
         cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools sort -m 1000000000 %s.raw.bam %s' %(strain, strain))
         cmd.append("/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools view -h %s.bam | perl -lane 'if($F[11] =~ /^NM:i:(\d+)$/){print if $1<=2}else{print}'| /opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools view -bS - -o %s.NM2.bam" %(strain, strain))
@@ -92,7 +93,7 @@ def main():
         #cat fq_RelocaTE2/rufipogon_W1715_RelocaTE2/repeat/te_only_read_portions_fa/*.five_prime.fa > rufipogon_W1715_1.te_repeat.five_prime.fa
     ofile.close()
 
-    #runjob('run_ping_SNP.sh', 180)
+    runjob('run_ping_SNP.sh', 190)
 
     ofile = open('run_ping_SNP.16th_SNP.summary', 'w')
     mpileup_files = glob.glob('*.mpileup')
