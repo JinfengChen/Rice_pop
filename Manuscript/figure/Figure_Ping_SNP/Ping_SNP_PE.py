@@ -10,6 +10,7 @@ from Bio import SeqIO
 sys.path.append('/rhome/cjinfeng/BigData/software/ProgramPython/lib')
 from utility import gff_parser, createdir
 import subprocess
+import pysam
 
 def usage():
     test="name"
@@ -48,6 +49,34 @@ def readtable(infile):
 def count_nucleotides(dna, nucleotide):
     return dna.lower().count(nucleotide.lower())
 
+#input bam file of SNP splitted
+#return dict with read cover the SNP
+def snp_reads_from_bam(bam, snp):
+    fsam = pysam.AlignmentFile(bam, 'rb')
+    data = defaultdict(lambda : int())
+    for record in fsam.fetch(until_eof = True):
+        if not record.is_unmapped:
+            name   = record.query_name
+            start  = int(record.reference_start) + 1
+            end    = int(record.reference_end) + 1
+            if start < 16 and end > 16:
+                data[name] = 1
+    return data
+
+#overlap SNP reads and Ping
+#input ping_reads, G_reads and A_reads
+#return dict with SNP->reads->1 
+def overlap_reads(ping_reads, G_reads, A_reads):
+    ping_reads_class = defaultdict(lambda : defaultdict(lambda : int()))
+    for ping_read in sorted(ping_reads.keys()):
+        if G_reads.has_key(ping_read):
+            ping_reads_class['G'][ping_read] = 1
+        elif A_reads.has_key(ping_read):
+            ping_reads_class['A'][ping_read] = 1
+        else:
+            ping_reads_class['UN'][ping_read] = 1
+    return ping_reads_class 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input')
@@ -61,11 +90,11 @@ def main():
         sys.exit(2)
 
     ping = os.path.abspath('ping.fa')
-    relocate2_dirs = glob.glob("%s/*_RelocaTEi" %(args.input))
+    relocate2_dirs = glob.glob("%s/*_RelocaTE2" %(args.input))
     ofile = open('run_ping_SNP.sh', 'w')
     for strain_dir in sorted(relocate2_dirs):
         #print >> ofile, strain_dir
-        strain = re.sub(r'_RelocaTEi', r'', os.path.split(strain_dir)[1])
+        strain = re.sub(r'_RelocaTE2', r'', os.path.split(strain_dir)[1])
         #strain = re.sub(r'_RelocaTE2', r'', os.path.split(strain_dir)[1])
         strain_dir = os.path.abspath(strain_dir)
         strain     = os.path.abspath(strain)
@@ -95,6 +124,7 @@ def main():
 
     runjob('run_ping_SNP.sh', 190)
 
+    #summary 16th SNP read count
     ofile = open('run_ping_SNP.16th_SNP.summary', 'w')
     mpileup_files = glob.glob('*.mpileup')
     for f in sorted(mpileup_files):
@@ -107,6 +137,105 @@ def main():
         strain = re.sub(r'.mpileup', r'', f)
         print >> ofile, '%s\t%s\t%s\t%s\t%s' %(strain, g, t, a, c)
     ofile.close()
+
+    #split 16th SNP reads
+    #os.system('python splitSNP.py ERS470370.NM2.bam ERS470370.NM2.SNPreads ping:16:A:G')
+
+    #summary 16th SNP paired-end reads: ping or mPing?
+    ofile_log = open('%s.Ping_SNP_reads.log' %(args.input), 'w')
+    ofile_sum = open('%s.Ping_SNP_reads.sum.txt' %(args.input), 'w')
+    print >> ofile_sum, 'Taxa\tTotal_Ping_reads\tPing_reads_16thSNP_G\ttPing_reads_16thSNP_A\ttTotal_mPing_reads\tmPing_reads_16thSNP_G\ttmPing_reads_16thSNP_A'
+    bam_files = glob.glob('*.NM2.bam')
+    for bam in sorted(bam_files):
+        print >> ofile_log, 'bam file: %s' %(bam)
+        strain = re.sub(r'.NM2.bam', r'', bam)
+        #split 16th SNP reads
+        prefix = re.sub(r'.bam', r'.SNPreads', bam)
+        os.system('python splitSNP.py %s %s ping:16:A:G' %(bam, prefix))
+        #
+        fsam = pysam.AlignmentFile(bam, 'rb')
+        data = defaultdict(lambda : defaultdict(lambda : list()))
+        bam_paired_reads_class = '%s.paired_reads_class.txt' %(bam)
+        ofile_class = open(bam_paired_reads_class, 'w')
+        for record in fsam.fetch(until_eof = True):
+            if not record.is_unmapped:
+                name   = record.query_name
+                start  = int(record.reference_start) + 1
+                #end    = int(start) + int(length) - 1 #should not allowed for indel or softclip
+                end    = int(record.reference_end) + 1
+                read1  = 1 if record.is_read1 else 2
+                pair_mapped = 1 if (record.is_paired and not record.mate_is_unmapped) else 0
+                #print 'alignment: %s, %s, %s' %(name, start, end)
+                if pair_mapped:
+                    data[name][read1] = [str(start), str(end)]
+        #process each paired-end that mapped on ping element
+        summary = defaultdict(lambda : int())
+        ping_reads = defaultdict(lambda : int())
+        mping_reads = defaultdict(lambda : int())
+        for read_pair in sorted(data.keys()):
+            #some reads with their pairs filtered out because of too much mismatch, remove these here
+            if len(data[read_pair][1]) == 2 and len(data[read_pair][2]) == 2:
+                summary['paired'] += 1
+                #print '%s\t%s\t%s' %(read_pair, '\t'.join(data[read_pair][1]), '\t'.join(data[read_pair][2]))
+                #read1 covers 16th SNP
+                if int(data[read_pair][1][0]) < 16 and int(data[read_pair][1][1]) > 16:
+                    #read2 entend into Ping
+                    if int(data[read_pair][2][1]) >= 300 and int(data[read_pair][2][1]) <= 1000:
+                        summary['Ping_reads'] += 1
+                        ping_reads[read_pair] = 1
+                        print >> ofile_class, '%s\t%s\t%s\tPing_reads' %(read_pair, '\t'.join(data[read_pair][1]), '\t'.join(data[read_pair][2]))                        
+                    elif int(data[read_pair][2][1]) < 300:
+                        summary['Short_insert'] += 1
+                        print >> ofile_class, '%s\t%s\t%s\tShort_insert' %(read_pair, '\t'.join(data[read_pair][1]), '\t'.join(data[read_pair][2]))
+                    elif int(data[read_pair][2][1]) > 1000:
+                        summary['mPing_reads'] += 1
+                        mping_reads[read_pair] = 1
+                        print >> ofile_class, '%s\t%s\t%s\tmPing_reads' %(read_pair, '\t'.join(data[read_pair][1]), '\t'.join(data[read_pair][2]))
+                    else:
+                        summary['error1'] += 1
+                        print >> ofile_class, '%s\t%s\t%s\terror1' %(read_pair, '\t'.join(data[read_pair][1]), '\t'.join(data[read_pair][2]))
+                #read2 covers 16th SNP
+                elif int(data[read_pair][2][0]) < 16 and int(data[read_pair][2][1]) > 16:
+                    #read1 extend into Ping
+                    if int(data[read_pair][1][1]) >= 300 and int(data[read_pair][1][1]) <= 1000:
+                        summary['Ping_reads'] += 1
+                        ping_reads[read_pair] = 1
+                        print >> ofile_class, '%s\t%s\t%s\tPing_reads' %(read_pair, '\t'.join(data[read_pair][1]), '\t'.join(data[read_pair][2]))
+                    elif int(data[read_pair][1][1]) < 300:
+                        summary['Short_insert'] += 1
+                        print >> ofile_class, '%s\t%s\t%s\tShort_insert' %(read_pair, '\t'.join(data[read_pair][1]), '\t'.join(data[read_pair][2]))
+                    elif int(data[read_pair][1][1]) > 1000:
+                        summary['mPing_reads'] += 1
+                        mping_reads[read_pair] = 1
+                        print >> ofile_class, '%s\t%s\t%s\tmPing_reads' %(read_pair, '\t'.join(data[read_pair][1]), '\t'.join(data[read_pair][2]))
+                    else:
+                        summary['error2'] += 1
+                        print >> ofile_class, '%s\t%s\t%s\terror2' %(read_pair, '\t'.join(data[read_pair][1]), '\t'.join(data[read_pair][2]))
+                else:
+                    summary['Not_16thSNP_reads'] += 1
+                    print >> ofile_class, '%s\t%s\t%s\tNot_16thSNP_reads' %(read_pair, '\t'.join(data[read_pair][1]), '\t'.join(data[read_pair][2]))
+        print >> ofile_log, 'Total mapped paired reads: %s' %(summary['paired'])
+        print >> ofile_log, 'Ping reads: %s' %(summary['Ping_reads'])
+        print >> ofile_log, 'mPing reads: %s' %(summary['mPing_reads'])
+        print >> ofile_log, 'Short insert: %s' %(summary['Short_insert'])
+        print >> ofile_log, 'error1: %s' %(summary['error1']) 
+        print >> ofile_log, 'error2: %s' %(summary['error2'])
+        print >> ofile_log, 'Not_16thSNP_reads: %s' %(summary['Not_16thSNP_reads'])
+        #overlap SNPreads and Pingreads
+        G_reads = snp_reads_from_bam('%s.alt.G.bam' %(prefix), 'G')   
+        A_reads = snp_reads_from_bam('%s.ref.A.bam' %(prefix), 'A')
+        ping_reads_class = overlap_reads(ping_reads, G_reads, A_reads) 
+        mping_reads_class = overlap_reads(mping_reads, G_reads, A_reads)
+        print >> ofile_log, 'Ping G-type 16th SNP reads: %s, %s' %(str(len(ping_reads_class['G'].keys())), ','.join(ping_reads_class['G'].keys()))
+        print >> ofile_log, 'Ping A-type 16th SNP reads: %s, %s' %(str(len(ping_reads_class['A'].keys())), ','.join(ping_reads_class['A'].keys()))
+        print >> ofile_log, 'Ping UN-type 16th SNP reads: %s, %s' %(str(len(ping_reads_class['UN'].keys())), ','.join(ping_reads_class['UN'].keys()))
+        print >> ofile_log, 'mPing G-type 16th SNP reads: %s, %s' %(str(len(mping_reads_class['G'].keys())), ','.join(mping_reads_class['G'].keys()))
+        print >> ofile_log, 'mPing A-type 16th SNP reads: %s, %s' %(str(len(mping_reads_class['A'].keys())), ','.join(mping_reads_class['A'].keys()))
+        print >> ofile_log, 'mPing UN-type 16th SNP reads: %s, %s' %(str(len(mping_reads_class['UN'].keys())), ','.join(mping_reads_class['UN'].keys()))
+        #summary
+        print >> ofile_sum, '%s\t%s\t%s\t%s\t%s\t%s\t%s' %(strain, summary['Ping_reads'], str(len(ping_reads_class['G'].keys())), str(len(ping_reads_class['A'].keys())), summary['mPing_reads'], str(len(mping_reads_class['G'].keys())), str(len(mping_reads_class['A'].keys()))) 
+    ofile_log.close()
+    ofile_sum.close()
 
 if __name__ == '__main__':
     main()
