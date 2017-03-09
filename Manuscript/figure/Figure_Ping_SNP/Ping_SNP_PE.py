@@ -90,11 +90,11 @@ def main():
         sys.exit(2)
 
     ping = os.path.abspath('ping.fa')
-    relocate2_dirs = glob.glob("%s/*_RelocaTE2" %(args.input))
+    relocate2_dirs = glob.glob("%s/*_RelocaTEi" %(args.input))
     ofile = open('run_ping_SNP.sh', 'w')
     for strain_dir in sorted(relocate2_dirs):
         #print >> ofile, strain_dir
-        strain = re.sub(r'_RelocaTE2', r'', os.path.split(strain_dir)[1])
+        strain = re.sub(r'_RelocaTEi', r'', os.path.split(strain_dir)[1])
         #strain = re.sub(r'_RelocaTE2', r'', os.path.split(strain_dir)[1])
         strain_dir = os.path.abspath(strain_dir)
         strain     = os.path.abspath(strain)
