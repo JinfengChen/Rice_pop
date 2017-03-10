@@ -59,13 +59,18 @@ def main():
 
 
     #fq_RelocaTE2_Ping_NM2_PE_assembly/rufipogon_W0106.assembly/contigs.fa
+    #NODE_2_length_548_cov_12.135036
     ofile = open('%s.contigs.fa' %(args.input), 'w')
+    s = re.compile(r'length_(\d+)_cov')
     contigs = glob.glob('%s/*/*/contigs.fa' %(args.input))
     for ctg in sorted(contigs):
         strain = os.path.split(os.path.split(ctg)[0])[1]
         strain = re.sub(r'.assembly', r'', strain)
+        strain = re.sub(r'.repeat.reads.', '_', strain)
         for record in SeqIO.parse(ctg,"fasta"):
-            record.id = '%s_%s' %(strain, record.id)
+            length = s.search(record.id).groups(0)[0] if s.search(record.id) else 0
+            record.id = '%s_len%s' %(strain, str(length))
+            record.anno = ''
             SeqIO.write(record, ofile, 'fasta')
     ofile.close()
 

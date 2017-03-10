@@ -1,8 +1,9 @@
 echo "30 rufipogon 16th SNP"
 python Ping_SNP.py --input fq_RelocaTE2_Ping > log 2>&1 &
 python Ping_SNP_PE.py --input fq_RelocaTE2_Ping > log 2>&1 &
-python Ping_SNP_PE_asm.py --input fq_RelocaTE2_Ping > log 2>&1 &
 python merge_assembly.py --input fq_RelocaTE2_Ping_NM2_PE_assembly
+python Ping_SNP_PE_asm.py --input fq_RelocaTE2_Ping > log 2>&1 &
+python merge_assembly_locus.py --input test_locus_assembly
 python Pong_mpileup.py --input fq_RelocaTE2_Pong > log 2>&1 &
 python mPing_mpileup.py --input fq_RelocaTE2_mPing > log 2>&1 &
 
@@ -12,6 +13,8 @@ python Ping_SNP.py --input Wildrice_fastq_RelocaTEi_Ping > log 2>&1 &
 echo "3000 rice 16th SNP"
 python Ping_SNP.py --input Rice3k_3000_RelocaTEi_Ping > log 2>&1 &
 python Ping_SNP_PE.py --input Rice3k_3000_RelocaTEi_Ping > log 2>&1 &
+python Ping_SNP_PE_asm.py --input Rice3k_3000_RelocaTEi_Ping > log 2>&1 &
+python merge_assembly_locus.py --input test_locus_assembly_3k 
 python Pong_mpileup.py --input Rice3k_3000_RelocaTEi_Pong > log 2>&1 &
 python mPing_mpileup.py --input Rice3k_3000_RelocaTEi_mPing > log 2>&1 &
 

@@ -86,7 +86,7 @@ def main():
     cmd = []
     for f in file_list:
         prefix = re.sub(r'.list', r'', f)
-        cmd.append('python %s/Get_List_Fastq.py --list %s --fastq %s.te_repeat.flankingReads.fq' %(home_dir, f, args.input))
+        cmd.append('python %s/Get_List_Fastq.py --list %s --fastq %s.te_repeat.ContainingReads.fq' %(home_dir, f, args.input))
         cmd.append('python %s/Split_Fastq2PE.py --input %s' %(home_dir, re.sub(r'.list', r'.fq', f)))
         cmd.append('/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth %s.assembly 31 -shortPaired -fastq -separate %s_1.fq %s_2.fq -short -fastq %s_unpaired.fq' %(prefix, prefix, prefix, prefix))
         cmd.append('/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg %s.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes' %(prefix))

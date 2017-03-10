@@ -91,11 +91,11 @@ def main():
 
     home_dir = os.path.split(os.path.realpath(__file__))[0]
     ping = os.path.abspath('ping.fa')
-    relocate2_dirs = glob.glob("%s/*_RelocaTE2" %(args.input))
+    relocate2_dirs = glob.glob("%s/*_RelocaTEi" %(args.input))
     ofile = open('run_ping_SNP.sh', 'w')
     for strain_dir in sorted(relocate2_dirs):
         #print >> ofile, strain_dir
-        strain = re.sub(r'_RelocaTE2', r'', os.path.split(strain_dir)[1])
+        strain = re.sub(r'_RelocaTEi', r'', os.path.split(strain_dir)[1])
         #strain = re.sub(r'_RelocaTE2', r'', os.path.split(strain_dir)[1])
         strain_dir = os.path.abspath(strain_dir)
         strain     = os.path.abspath(strain)
@@ -105,14 +105,14 @@ def main():
         prefix       = '%s/%s' %(assembly_dir, os.path.split(strain)[1])
         cmd.append('mkdir %s' %(assembly_dir))
         cmd.append('cat %s/repeat/results/*.repeat.reads.list > %s.repeat.reads.list' %(strain_dir, prefix))
-        cmd.append('cat %s/repeat/flanking_seq/*_1.te_repeat.flankingReads.fq | sed "s/^+.*/+/" > %s_1.te_repeat.flankingReads.fq' %(strain_dir, prefix))
-        cmd.append('cat %s/repeat/flanking_seq/*_2.te_repeat.flankingReads.fq | sed "s/^+.*/+/" > %s_2.te_repeat.flankingReads.fq' %(strain_dir, prefix))
-        cmd.append('python %s/Change_Fastq_Header.py --fastq %s_1.te_repeat.flankingReads.fq --header read1' %(home_dir, prefix))
-        cmd.append('python %s/Change_Fastq_Header.py --fastq %s_2.te_repeat.flankingReads.fq --header read2' %(home_dir, prefix))
+        cmd.append('cat %s/repeat/te_containing_fq/*_1.te_repeat.ContainingReads.fq > %s_1.te_repeat.ContainingReads.fq' %(strain_dir, prefix))
+        cmd.append('cat %s/repeat/te_containing_fq/*_2.te_repeat.ContainingReads.fq > %s_2.te_repeat.ContainingReads.fq' %(strain_dir, prefix))
+        cmd.append('python %s/Change_Fastq_Header.py --fastq %s_1.te_repeat.ContainingReads.fq --header read1' %(home_dir, prefix))
+        cmd.append('python %s/Change_Fastq_Header.py --fastq %s_2.te_repeat.ContainingReads.fq --header read2' %(home_dir, prefix))
         #cmd.append('cat %s/repeat/flanking_seq/*_1.te_repeat.flankingReads.fq.matched > %s_1.te_repeat.flankingReads.fq.matched' %(strain_dir, prefix))
         #cmd.append('cat %s/repeat/flanking_seq/*_2.te_repeat.flankingReads.fq.matched > %s_2.te_repeat.flankingReads.fq.matched' %(strain_dir, prefix))
         #cmd.append('cat %s/repeat/flanking_seq/*_1.te_repeat.flankingReads.unPaired.fq > %s_2.te_repeat.flankingReads.unPaired.fq' %(strain_dir, prefix))
-        cmd.append('cat %s_1.te_repeat.flankingReads.name.fq %s_2.te_repeat.flankingReads.name.fq > %s.te_repeat.flankingReads.fq' %(prefix, prefix, prefix))
+        cmd.append('cat %s_1.te_repeat.ContainingReads.name.fq %s_2.te_repeat.ContainingReads.name.fq > %s.te_repeat.ContainingReads.fq' %(prefix, prefix, prefix))
         cmd.append('python %s/mPing_locus_reads_list.py --input %s.repeat.reads.list' %(home_dir, prefix))
         cmd.append('python %s/Get_List_Fastq_runner.py --input %s' %(home_dir, prefix))       
  

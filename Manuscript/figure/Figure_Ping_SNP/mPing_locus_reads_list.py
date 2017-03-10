@@ -42,7 +42,7 @@ def locus_reads_list(infile):
                 reads = re.split(r',', unit[3])
                 for read in reads:
                     data[locus].append(re.split(r':', read)[0])
-    prefix = re.sub(r'.list', r'', infile)
+    prefix = re.sub(r'.repeat.reads.list', r'', infile)
     for locus in data.keys():
         ofile = open('%s.%s.list' %(prefix, locus), 'w')
         print >> ofile, '\n'.join(list(set(data[locus])))

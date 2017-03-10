@@ -13,8 +13,7 @@ from utility import gff_parser, createdir
 def usage():
     test="name"
     message='''
-python Split_Fastq2PE.py --input rufipogon_W0180_RelocaTE2.te_reads.fq
-Input fastq is a mix of read1 and read2 of PE sequence. We split the fatsq file into read1.fq, read2.fq and unpaired.fq using read name.
+python ../Change_Fastq_Header.py --fastq ERS469852_1.te_repeat.ContainingReads.fq --header read1
 
     '''
     print message
@@ -54,19 +53,31 @@ def header_change(fastqfile, prefix):
         #print 'id:', record.id
         #print 'seq:', record.seq
         #unit = re.split(r':', str(record.id))
+        record.id = re.split(r':', record.id)[0]
         record.id = '%s.%s' %(prefix, record.id)
+        record.description = ''
         SeqIO.write(record, ofile, 'fastq')
     ofile.close()
 
-def read_list(infile):
-    data = defaultdict(lambda : str())
-    with open (infile, 'r') as filehd:
+def header_change2(fastqfile, prefix):
+    ofile = open(re.sub(r'.fq', r'.name.fq', fastqfile), 'w')
+    line_n= 0
+    with open (fastqfile, 'r') as filehd:
         for line in filehd:
             line = line.rstrip()
-            if len(line) > 2: 
-                unit = re.split(r'\t',line)
-                data[unit[0]] = 1
-    return data
+            unit = re.split(r' ', line)
+            if len(line) > 2:
+                line_n += 1
+                if line_n == 1:
+                    header = re.sub(r'@', r'', unit[0])
+                    print >> ofile, '@%s.%s' %(prefix, header)
+                elif line_n == 2:
+                    print >> ofile, line
+                elif line_n == 3:
+                    print >> ofile, '+'
+                elif line_n == 4:
+                    print >> ofile, line
+                    line_n = 0
 
 
 def main():
@@ -81,7 +92,7 @@ def main():
         usage()
         sys.exit(2)
 
-    header_change(args.fastq, args.header)
+    header_change2(args.fastq, args.header)
 
 if __name__ == '__main__':
     main()
