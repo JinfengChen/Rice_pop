@@ -93,6 +93,8 @@ def main():
     ping = os.path.abspath('ping.fa')
     relocate2_dirs = glob.glob("%s/*_RelocaTEi" %(args.input))
     ofile = open('run_ping_SNP.sh', 'w')
+    number_of_unit     = 0
+    number_of_job_per  = 0
     for strain_dir in sorted(relocate2_dirs):
         #print >> ofile, strain_dir
         strain = re.sub(r'_RelocaTEi', r'', os.path.split(strain_dir)[1])
@@ -115,7 +117,10 @@ def main():
         cmd.append('cat %s_1.te_repeat.ContainingReads.name.fq %s_2.te_repeat.ContainingReads.name.fq > %s.te_repeat.ContainingReads.fq' %(prefix, prefix, prefix))
         cmd.append('python %s/mPing_locus_reads_list.py --input %s.repeat.reads.list' %(home_dir, prefix))
         cmd.append('python %s/Get_List_Fastq_runner.py --input %s' %(home_dir, prefix))       
- 
+        cmd.append('rm %s.*.list %s.*.fq %s_*.fq' %(prefix, prefix, prefix))
+        #
+        number_of_job_per = len(cmd)
+        number_of_unit   += 1
         ##assembly
         #cmd.append('cat %s_1.te_repeat.ContainingReads.fa %s_2.te_repeat.ContainingReads.fa > %s.te_reads_all.fa' %(strain, strain, strain))
         #cmd.append('python ~/BigData/software/bin/fasta2fastq.py %s.te_reads_all.fa %s.te_reads_all.fq' %(strain, strain))
@@ -135,7 +140,14 @@ def main():
         #cat fq_RelocaTE2/rufipogon_W1715_RelocaTE2/repeat/te_only_read_portions_fa/*.five_prime.fa > rufipogon_W1715_1.te_repeat.five_prime.fa
     ofile.close()
 
-    runjob('run_ping_SNP.sh', 90)
+    jobs_per_run = number_of_job_per
+    if number_of_unit > 30:
+        jobs_per_run = number_of_job_per*(int(number_of_unit/30))
+    print 'Total number of strains: %s' %(number_of_unit)
+    print 'Number of job per strain: %s' %(number_of_job_per)
+    print 'Number of job per run by qsub: %s' %(jobs_per_run)
+    runjob('run_ping_SNP.sh', jobs_per_run)
+
 
 '''
     #summary 16th SNP read count

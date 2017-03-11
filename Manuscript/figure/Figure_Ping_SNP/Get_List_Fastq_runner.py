@@ -82,7 +82,7 @@ def main():
         sys.exit(2)
 
     home_dir = os.path.split(os.path.realpath(__file__))[0]
-    file_list = glob.glob('%s.repeat.reads.*.list' %(args.input))
+    file_list = glob.glob('%s.repeat_*.list' %(args.input))
     cmd = []
     for f in file_list:
         prefix = re.sub(r'.list', r'', f)
