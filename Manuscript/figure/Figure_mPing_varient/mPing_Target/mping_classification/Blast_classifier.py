@@ -65,8 +65,10 @@ def blast_classifier(infile):
         rank += 1
         node = 'node%s' %(rank)
         print >> ofile_class, 'node%s: %s\t%s' %(rank, subgraph.number_of_nodes(), ','.join(subgraph.nodes()))
-        rep_id = sorted(subgraph.nodes())[0]
-        reprensentive[rep_id] = node
+        #output only graph have more than 10 nodes into fasta 
+        if subgraph.number_of_nodes() >= 10:
+            rep_id = sorted(subgraph.nodes())[0]
+            reprensentive[rep_id] = node
     #write representive fasta
     fastafile = re.sub(r'.blast.table', r'.fa', infile)
     rep_seq = sub_fasta_seq(fastafile, reprensentive)
