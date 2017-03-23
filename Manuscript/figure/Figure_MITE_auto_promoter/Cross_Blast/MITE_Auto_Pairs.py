@@ -52,7 +52,10 @@ def pick_highest_match(match_list):
 
 #Query_id        Query_length    Query_start     Query_end       Subject_id      Subject_length  Subject_start   Subject_end     Identity        Positive        Gap     Align_length    Score   E_value Query_annotation
 #rice_2_28804    342     78      341     pep-hit183_Chr6_22499070_22499586_plus  20518   3554    3825    0.83
-def Paring_MITE_Auto_From_BLAST(infile):
+def Paring_MITE_Auto_From_BLAST(infile, id_cut, len_cut, end_cut):
+    #id_cut(0.95):  minimum identify between MITE and auto matches
+    #len_cut(50): length cutoff of match at end
+    #end_cut(5): length cutoff allowed to miss tiny part of end(TSD|TIR boundary)
     data = defaultdict(lambda : defaultdict(lambda : defaultdict(lambda : list())))
     with open (infile, 'r') as filehd:
         for line in filehd:
@@ -60,16 +63,16 @@ def Paring_MITE_Auto_From_BLAST(infile):
             if len(line) > 2 and not line.startswith(r'Query_id'): 
                 unit = re.split(r'\t',line)
                 #identify > 95% and match length > 50bp
-                if float(unit[8]) >= 0.95 and int(unit[11]) >= 50:
+                if float(unit[8]) >= float(id_cut) and int(unit[11]) >= int(len_cut):
                     #query start have match between 1-50 bp 
-                    if int(unit[2]) <= 5 and int(unit[3]) >= 50:
+                    if int(unit[2]) <= int(end_cut) and int(unit[3]) >= int(len_cut):
                         data[unit[0]][unit[4]]['start'].append([int(unit[1]), int(unit[2]), int(unit[3]), int(unit[5]), int(unit[6]), int(unit[7]), float(unit[8]), int(unit[11])])
                     #query end have match between TElen-50 to TElen
                     elif int(unit[2]) <= int(unit[1]) - 50 and int(unit[3]) >= int(unit[1]) - 5:
                         data[unit[0]][unit[4]]['end'].append([int(unit[1]), int(unit[2]), int(unit[3]), int(unit[5]), int(unit[6]), int(unit[7]), float(unit[8]), int(unit[11])])
-    ofile_list = open('%s.pairs.list' %(infile), 'w')
+    ofile_list = open('%s.pairs.%s_%s_%s.list' %(infile, id_cut, len_cut, end_cut), 'w')
     print >> ofile_list, 'MITE\tAutonomous\tQuery_length\tQuery_start\tQuery_end\t\tSubject_length\tSubject_start\tSubject_end\tIdentity\tAlign_length\tQuery_length\tQuery_start\tQuery_end\t\tSubject_length\tSubject_start\tSubject_end\tIdentity\tAlign_length'
-    ofile_log  = open('%s.pairs.log' %(infile), 'w')
+    ofile_log  = open('%s.pairs.%s_%s_%s.log' %(infile, id_cut, len_cut, end_cut), 'w')
     for query in sorted(data.keys()):
         #print query
         for target in sorted(data[query].keys()):
@@ -93,6 +96,12 @@ def Paring_MITE_Auto_From_BLAST(infile):
                 #    three_end = pick_highest_match(data[query][target]['end'])
                 five_end = pick_highest_match(data[query][target]['start'])
                 three_end = pick_highest_match(data[query][target]['end'])
+                ##skip MITE matched to different position
+                if three_end[1] < five_end[2] - 30:
+                    #continue
+                    print >> ofile_log, '%s\t%s\t%s\t%s\tMatch in flanking sequence: case1' %(query, target, '\t'.join(map(str, five_end)), '\t'.join(map(str, three_end)))
+                    #print >> ofile_list, '%s\t%s\t%s\t%s\tMatch in flanking sequence: case1' %(query, target, '\t'.join(map(str, five_end)), '\t'.join(map(str, three_end)))
+                    continue
                 #plus to plus match of MITE and autonomous
                 if five_end[4] < three_end[5] or five_end[4] < three_end[5]:
                     print >> ofile_log, 'plus to plus'
@@ -137,7 +146,12 @@ def main():
         usage()
         sys.exit(2)
 
-    Paring_MITE_Auto_From_BLAST(args.input)
+    #id_cut(0.95):  minimum identify between MITE and auto matches
+    #len_cut(50): length cutoff of match at end
+    #end_cut(5): length cutoff allowed to miss tiny part of end(TSD|TIR boundary)
+    Paring_MITE_Auto_From_BLAST(args.input, 0.95, 50, 5)
+    Paring_MITE_Auto_From_BLAST(args.input, 0.90, 50, 10)
+    Paring_MITE_Auto_From_BLAST(args.input, 0.90, 30, 10)
 
 if __name__ == '__main__':
     main()
