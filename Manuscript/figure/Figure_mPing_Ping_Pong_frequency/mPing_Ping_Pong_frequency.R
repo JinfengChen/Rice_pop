@@ -33,6 +33,9 @@ rect(-0.2, b, max(xx)+0.8, b+2,border=FALSE,col='white')
 
 mtext("A", side=3, line = 1.5, at = -4, cex=1.4)
 
+##zoom in plot
+#library("Hmisc")
+
 #Ping
 ping_data <- read.table("Rice3k_3000_RelocaTEi_Ping.CombinedGFF.ALL.merge.frequency", sep="\t", header=F)
 ping <- ping_data[,6]
