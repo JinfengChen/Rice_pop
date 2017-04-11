@@ -73,6 +73,7 @@ def read_list(infile):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input')
+    parser.add_argument('--ping')
     parser.add_argument('-v', dest='verbose', action='store_true')
     args = parser.parse_args()
     try:
@@ -81,6 +82,7 @@ def main():
         usage()
         sys.exit(2)
 
+    ping = os.path.abspath(args.ping)
     home_dir = os.path.split(os.path.realpath(__file__))[0]
     file_list = glob.glob('%s.repeat_*.list' %(args.input))
     cmd = []
@@ -90,6 +92,14 @@ def main():
         cmd.append('python %s/Split_Fastq2PE.py --input %s' %(home_dir, re.sub(r'.list', r'.fq', f)))
         cmd.append('/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth %s.assembly 31 -shortPaired -fastq -separate %s_1.fq %s_2.fq -short -fastq %s_unpaired.fq' %(prefix, prefix, prefix, prefix))
         cmd.append('/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg %s.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes' %(prefix))
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa mem %s %s.fq > %s.sam' %(ping, prefix, prefix))
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools view -bS -o %s.raw.bam %s.sam' %(prefix, prefix)) 
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools sort -m 1000000000 %s.raw.bam %s' %(prefix, prefix))
+        cmd.append("/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools view -h %s.bam | perl -lane 'if($F[11] =~ /^NM:i:(\d+)$/){print if $1<=2}else{print}'| /opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools view -bS - -o %s.NM2.bam" %(prefix, prefix))
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools index %s.bam' %(prefix))
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools index %s.NM2.bam' %(prefix))
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools mpileup %s.NM2.bam > %s.NM2.mpileup' %(prefix, prefix))
+
     for c in cmd:
         print c
         os.system(c)

@@ -26,6 +26,42 @@ def runjob(script, lines):
     #print cmd 
     os.system(cmd)
 
+def pop_sum(strains, strains3k_data, acc2name):
+    data_sum = defaultdict(lambda : int())
+    for s in strains.keys():
+        name = acc2name[s]
+        pop  = strains3k_data[name]
+        data_sum[pop] += 1
+    return data_sum
+
+#Taxa	Color	Label	Name	Origin	Group	mPing	Ping	Pong
+#B001	blue	Heibiao|B001|Temp	Heibiao	China	Temperate jap	71	1	8
+def sum_3k_pop(infile):
+    data = defaultdict(lambda : str())
+    pop  = defaultdict(lambda : int())
+    with open (infile, 'r') as filehd:
+        for line in filehd:
+            line = line.rstrip()
+            if len(line) > 2 and not line.startswith(r'Taxa'): 
+                unit = re.split(r'\t',line)
+                data[unit[0]] = unit[5]
+                pop[unit[5]]  += 1
+    return data, pop
+
+#1	B001	China	Temperate japonica	ERS470219
+def read_download_table(infile):
+    data = defaultdict(lambda : str())
+    with open (infile, 'r') as filehd:
+        for line in filehd:
+            line = line.rstrip()
+            if len(line) > 2: 
+                unit = re.split(r'\t',line)
+                strain = re.sub(r'IRIS', r'IRIS_', unit[1])
+                data[unit[4]] = strain
+               
+    return data
+
+
 
 
 def fasta_id(fastafile):
@@ -91,11 +127,12 @@ def main():
 
     if not args.gff:
         args.gff = 'Rice3k_3000_RelocaTEi_Ping.CombinedGFF.ALL.high_conf.gff'
+    args.gff = os.path.abspath(args.gff)    
 
     home_dir = os.path.split(os.path.realpath(__file__))[0]
     ping = os.path.abspath('ping.fa')
     relocate2_dirs = glob.glob("%s/*_RelocaTEi" %(args.input))
-    ofile = open('run_ping_SNP.sh', 'w')
+    ofile = open('%s.run_ping_SNP.sh' %(args.input), 'w')
     number_of_unit     = 0
     number_of_job_per  = 0
     ping_strain = readgff(args.gff)
@@ -121,8 +158,8 @@ def main():
         #cmd.append('cat %s/repeat/flanking_seq/*_2.te_repeat.flankingReads.fq.matched > %s_2.te_repeat.flankingReads.fq.matched' %(strain_dir, prefix))
         #cmd.append('cat %s/repeat/flanking_seq/*_1.te_repeat.flankingReads.unPaired.fq > %s_2.te_repeat.flankingReads.unPaired.fq' %(strain_dir, prefix))
         cmd.append('cat %s_1.te_repeat.ContainingReads.name.fq %s_2.te_repeat.ContainingReads.name.fq > %s.te_repeat.ContainingReads.fq' %(prefix, prefix, prefix))
-        cmd.append('python %s/Ping_locus_reads_list.py --input %s.repeat.reads.list' %(home_dir, prefix))
-        cmd.append('python %s/Get_List_Fastq_runner.py --input %s' %(home_dir, prefix))       
+        cmd.append('python %s/Ping_locus_reads_list.py --input %s.repeat.reads.list --gff %s' %(home_dir, prefix, args.gff))
+        cmd.append('python %s/Get_List_Fastq_runner.py --input %s --ping %s' %(home_dir, prefix, ping))       
         #cmd.append('rm %s.*.list %s.*.fq %s_*.fq' %(prefix, prefix, prefix))
         #
         number_of_job_per = len(cmd)
@@ -152,8 +189,46 @@ def main():
     print 'Total number of strains: %s' %(number_of_unit)
     print 'Number of job per strain: %s' %(number_of_job_per)
     print 'Number of job per run by qsub: %s' %(jobs_per_run)
-    runjob('run_ping_SNP.sh', jobs_per_run)
+    #runjob('%s.run_ping_SNP.sh' %(args.input), jobs_per_run)
 
+    ofile = open('%s.Ping_Locus_16th_SNP.summary' %(args.input), 'w')
+    print >> ofile, 'Strain\tPing_loci\t#G\t#T\t#A\t#C'
+    #ERS467761_mPing_assembly/ERS467761.repeat_Chr3_14307409_14307411.NM2.mpileup
+    mpileup_files = glob.glob('*_mPing_assembly/*.NM2.mpileup')
+    G_strains = defaultdict(lambda : int())
+    A_strains = defaultdict(lambda : int())
+    for f in sorted(mpileup_files):
+        cmd = "cat %s | awk '{if($2==16){print $5}}'" %(f) 
+        sequence = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read().rstrip()
+        g = count_nucleotides(sequence, 'G')
+        t = count_nucleotides(sequence, 'T')
+        a = count_nucleotides(sequence, 'A')
+        c = count_nucleotides(sequence, 'C')
+        strain = re.split(r'\.', os.path.split(f)[1])[0]
+        locus  = re.sub(r'.NM2.mpileup', r'', re.split(r'\.', os.path.split(f)[1])[1])
+        #print f, os.path.split(f)[1], strain, locus
+        print >> ofile, '%s\t%s\t%s\t%s\t%s\t%s' %(strain, locus, g, t, a, c)
+        if g >= 2:
+            G_strains[strain] = 1
+        if a >= 2:
+            A_strains[strain] = 1
+    ofile.close()
+
+    #summary
+    strain3k_data, strain3k_sum    = sum_3k_pop('rice_line_ALL_3000.anno.landrace.list')
+    acc2name         = read_download_table('rice_line_3000.download.list')
+    ping_strains_sum = pop_sum(ping_strain, strain3k_data, acc2name)
+    G_strains_sum    = pop_sum(G_strains, strain3k_data, acc2name)
+    A_strains_sum    = pop_sum(A_strains, strain3k_data, acc2name) 
+  
+    ofile = open('%s.Ping_Locus_16th_SNP.pop.summary' %(args.input), 'w')
+    print >> ofile, 'Population\t3000\tPing\tPing_G\tPing_A'
+    for p in strain3k_sum.keys():
+        ping_strains_temp = ping_strains_sum[p] if ping_strains_sum.has_key(p) else 'NA'
+        G_strains_temp = G_strains_sum[p] if G_strains_sum.has_key(p) else 'NA'
+        A_strains_temp = A_strains_sum[p] if A_strains_sum.has_key(p) else 'NA'
+        print >> ofile, '%s\t%s\t%s\t%s\t%s' %(p, strain3k_sum[p], ping_strains_temp, G_strains_temp, A_strains_temp)
+    ofile.close()
 
 '''
     #summary 16th SNP read count

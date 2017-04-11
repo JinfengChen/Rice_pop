@@ -24,7 +24,7 @@ def runjob(script, lines):
     #print cmd 
     os.system(cmd)
 
-#Chr3	ERS469922	RelocaTE_i	33213691	33213693
+#Chr3	ERS469922	RelocaTE_i	33213691	33213693 .	-	.	ID=repeat_Chr3_33213691_33213693;Strain=ERS469922;
 def readgff(infile):
     data = defaultdict(lambda : int())
     with open (infile, 'r') as filehd:
@@ -33,6 +33,10 @@ def readgff(infile):
             if len(line) > 2: 
                 unit = re.split(r'\t',line)
                 index= '%s.repeat_%s_%s_%s' %(unit[1], unit[0], unit[3], unit[4])
+                temp = re.split(r';', unit[8])
+                index2 = re.sub(r'ID=', r'%s.' %(unit[1]), temp[0])
+                if not index == index2:
+                    index = index2
                 data[index] = 1
     return data
 
