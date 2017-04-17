@@ -121,14 +121,14 @@ def ping_avg_mpileup(infile):
             if len(line) > 2: 
                 unit = re.split(r'\t',line)
                 #print line, unit[1]
-                if int(unit[1]) > 260 and int(unit[1]) < 3260:
+                if int(unit[1]) >=1 and int(unit[1]) <= 430:
                     #print 'ping sequence'
                     data.append(int(unit[3]))
                 else:
                     mping += 1
     avg, med, sd = 0, 0, 0
     if len(data) > 0: 
-        avg = np.sum(data)/3000.00
+        avg = np.sum(data)/430.00
         #med = np.median(data)
         #sd  = np.std(data) 
     return avg
@@ -158,7 +158,7 @@ def main():
     #ping    2       N       11      GGGGGGGgg^]G^]g IIIIIIIIIII
     covs = glob.glob('%s/*.NM2.mpileup' %(args.input))
     ofile = open(args.output, 'w')
-    print >> ofile, "Taxa\tPing_Mean"
+    print >> ofile, "Taxa\tmPing_Mean"
     for ping in sorted(covs):
         name  = os.path.split(ping)[1]
         name  = re.sub(r'_RelocaTE2\.NM2.mpileup', r'', name)

@@ -60,7 +60,7 @@ def main():
         usage()
         sys.exit(2)
 
-    ping = os.path.abspath('ping.fa')
+    ping = os.path.abspath('pong.fa')
     relocate2_dirs = glob.glob("%s/*_RelocaTE2" %(args.input))
     ofile = open('%s.run_ping_SNP.sh' %(args.input), 'w')
     cmd_n = 0

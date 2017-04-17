@@ -38,24 +38,21 @@ def main():
     
     list1 = readtable(sys.argv[1])
     list2 = readtable(sys.argv[2])
-    both  = defaultdict(lambda : str())
+    both  = defaultdict(lambda : int())
     for ril in sorted(list1.keys()):
-        if ril == 'Taxa':
-            continue
         if not list2.has_key(ril):
             print 'Only in list1: %s' %(ril)
         else:
             both[ril] = 1
 
     for ril in sorted(list2.keys()):
-        if ril == 'Taxa':
-            continue
         if not list1.has_key(ril):
             print 'Only in list2: %s' %(ril)
+            #print ril
         else:
             both[ril] = 1
     for ril in sorted(both.keys()):
-            print 'In both: %s' %(ril)
+        print 'Both: %s' %(ril)    
 
 if __name__ == '__main__':
     main()

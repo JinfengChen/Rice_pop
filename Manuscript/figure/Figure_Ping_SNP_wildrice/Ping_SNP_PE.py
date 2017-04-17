@@ -22,7 +22,7 @@ python Ping_SNP.py --input fq_RelocaTE2
 
 
 def runjob(script, lines):
-    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-slurm.pl --maxjob 60 --lines %s --interval 120 --task 1 --mem 15G --time 10:00:00 --convert no %s' %(lines, script)
+    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-slurm.pl --maxjob 60 --lines %s --interval 120 --task 1 --mem 15G --time 10:00:00 --queue intel --convert no %s' %(lines, script)
     #print cmd 
     os.system(cmd)
 
@@ -89,12 +89,9 @@ def main():
         usage()
         sys.exit(2)
 
-    home_dir = os.path.split(os.path.realpath(__file__))[0]
     ping = os.path.abspath('ping.fa')
     relocate2_dirs = glob.glob("%s/*_RelocaTE2" %(args.input))
     ofile = open('run_ping_SNP.sh', 'w')
-    number_of_unit     = 0
-    number_of_job_per  = 0
     for strain_dir in sorted(relocate2_dirs):
         #print >> ofile, strain_dir
         strain = re.sub(r'_RelocaTE2', r'', os.path.split(strain_dir)[1])
@@ -102,54 +99,38 @@ def main():
         strain_dir = os.path.abspath(strain_dir)
         strain     = os.path.abspath(strain)
         cmd = []
-        #../fq_RelocaTE2_Ping/nivara_IRGC105327_RelocaTE2/repeat/results/Chr1.repeat.reads.list
-        assembly_dir = '%s_mPing_assembly' %(strain)
-        prefix       = '%s/%s' %(assembly_dir, os.path.split(strain)[1])
-        cmd.append('mkdir %s' %(assembly_dir))
-        cmd.append('cat %s/repeat/results/*.repeat.reads.list > %s.repeat.reads.list' %(strain_dir, prefix))
-        cmd.append('cat %s/repeat/te_containing_fq/*_1.te_repeat.ContainingReads.fq > %s_1.te_repeat.ContainingReads.fq' %(strain_dir, prefix))
-        cmd.append('cat %s/repeat/te_containing_fq/*_2.te_repeat.ContainingReads.fq > %s_2.te_repeat.ContainingReads.fq' %(strain_dir, prefix))
-        cmd.append('python %s/Change_Fastq_Header.py --fastq %s_1.te_repeat.ContainingReads.fq --header read1' %(home_dir, prefix))
-        cmd.append('python %s/Change_Fastq_Header.py --fastq %s_2.te_repeat.ContainingReads.fq --header read2' %(home_dir, prefix))
-        #cmd.append('cat %s/repeat/flanking_seq/*_1.te_repeat.flankingReads.fq.matched > %s_1.te_repeat.flankingReads.fq.matched' %(strain_dir, prefix))
-        #cmd.append('cat %s/repeat/flanking_seq/*_2.te_repeat.flankingReads.fq.matched > %s_2.te_repeat.flankingReads.fq.matched' %(strain_dir, prefix))
-        #cmd.append('cat %s/repeat/flanking_seq/*_1.te_repeat.flankingReads.unPaired.fq > %s_2.te_repeat.flankingReads.unPaired.fq' %(strain_dir, prefix))
-        cmd.append('cat %s_1.te_repeat.ContainingReads.name.fq %s_2.te_repeat.ContainingReads.name.fq > %s.te_repeat.ContainingReads.fq' %(prefix, prefix, prefix))
-        cmd.append('python %s/mPing_locus_reads_list.py --input %s.repeat.reads.list' %(home_dir, prefix))
-        cmd.append('python %s/Get_List_Fastq_runner.py --input %s' %(home_dir, prefix))       
-        #cmd.append('rm %s.*.list %s.*.fq %s_*.fq' %(prefix, prefix, prefix))
-        #
-        number_of_job_per = len(cmd)
-        number_of_unit   += 1
+        cmd.append('cat %s/repeat/te_only_read_portions_fa/*_1.te_repeat.*_prime.fa | sed "s/>/>read1\./" > %s_1.te_repeat.5_3_prime.fa' %(strain_dir, strain))
+        cmd.append('cat %s/repeat/te_only_read_portions_fa/*_2.te_repeat.*_prime.fa | sed "s/>/>read2\./" > %s_2.te_repeat.5_3_prime.fa' %(strain_dir, strain))
+        cmd.append('cat %s/repeat/te_containing_fq/*_1.te_repeat.ContainingReads.fq > %s_1.te_repeat.ContainingReads.fq' %(strain_dir, strain))
+        cmd.append('cat %s/repeat/te_containing_fq/*_2.te_repeat.ContainingReads.fq > %s_2.te_repeat.ContainingReads.fq' %(strain_dir, strain))
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/seqtk seq -A %s_1.te_repeat.ContainingReads.fq | sed "s/>/>read1\./" > %s_1.te_repeat.ContainingReads.fa' %(strain, strain))
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/seqtk seq -A %s_2.te_repeat.ContainingReads.fq | sed "s/>/>read2\./" > %s_2.te_repeat.ContainingReads.fa' %(strain, strain))
+        cmd.append('perl ~/BigData/software/bin/fastaDeal.pl --pat "middle" %s_1.te_repeat.ContainingReads.fa > %s_1.te_repeat.ContainingReads_middle.fa' %(strain, strain))
+        cmd.append('perl ~/BigData/software/bin/fastaDeal.pl --pat "middle" %s_2.te_repeat.ContainingReads.fa > %s_2.te_repeat.ContainingReads_middle.fa' %(strain, strain))
+        cmd.append('cat %s_1.te_repeat.5_3_prime.fa %s_2.te_repeat.5_3_prime.fa %s_1.te_repeat.ContainingReads_middle.fa %s_2.te_repeat.ContainingReads_middle.fa > %s.te_reads.fa' %(strain, strain, strain, strain, strain))
+        cmd.append('python ~/BigData/software/bin/fasta2fastq.py %s.te_reads.fa %s.te_reads.fq' %(strain, strain))
+        cmd.append('python ~/BigData/software/bin/Split_Fastq2SMARTPE.py --input %s.te_reads.fq' %(strain))
         ##assembly
-        #cmd.append('cat %s_1.te_repeat.ContainingReads.fa %s_2.te_repeat.ContainingReads.fa > %s.te_reads_all.fa' %(strain, strain, strain))
-        #cmd.append('python ~/BigData/software/bin/fasta2fastq.py %s.te_reads_all.fa %s.te_reads_all.fq' %(strain, strain))
-        #cmd.append('python ~/BigData/software/bin/Split_Fastq2PE.py --input %s.te_reads_all.fq' %(strain))
-        #cmd.append('/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth %s.assembly 31 -shortPaired -fastq -separate %s.te_reads_all_1.fq %s.te_reads_all_2.fq' %(strain, strain, strain))
-        #cmd.append('/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg %s.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes' %(strain))
+        cmd.append('cat %s_1.te_repeat.ContainingReads.fa %s_2.te_repeat.ContainingReads.fa > %s.te_reads_all.fa' %(strain, strain, strain))
+        cmd.append('python ~/BigData/software/bin/fasta2fastq.py %s.te_reads_all.fa %s.te_reads_all.fq' %(strain, strain))
+        cmd.append('python ~/BigData/software/bin/Split_Fastq2PE.py --input %s.te_reads_all.fq' %(strain))
+        cmd.append('/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth %s.assembly 31 -shortPaired -fastq -separate %s.te_reads_all_1.fq %s.te_reads_all_2.fq' %(strain, strain, strain))
+        cmd.append('/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg %s.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes' %(strain))
         ##
-        #cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa mem -p %s %s.te_reads_smart.fq > %s.sam' %(ping, strain, strain))
-        #cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools view -bS -o %s.raw.bam %s.sam' %(strain, strain)) 
-        #cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools sort -m 1000000000 %s.raw.bam %s' %(strain, strain))
-        #cmd.append("/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools view -h %s.bam | perl -lane 'if($F[11] =~ /^NM:i:(\d+)$/){print if $1<=2}else{print}'| /opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools view -bS - -o %s.NM2.bam" %(strain, strain))
-        #cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools index %s.bam' %(strain))
-        #cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools index %s.NM2.bam' %(strain))
-        #cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools mpileup %s.NM2.bam > %s.NM2.mpileup' %(strain, strain))
-        #cmd.append('rm %s.raw.bam %s.sam %s_1.te_repeat.5_3_prime.fa %s_2.te_repeat.5_3_prime.fa %s_1.te_repeat.ContainingReads.fq %s_2.te_repeat.ContainingReads.fq %s_1.te_repeat.ContainingReads.fa %s_2.te_repeat.ContainingReads.fa %s_1.te_repeat.ContainingReads_middle.fa %s_2.te_repeat.ContainingReads_middle.fa' %(strain, strain, strain, strain, strain, strain, strain, strain, strain, strain))
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa mem -p %s %s.te_reads_smart.fq > %s.sam' %(ping, strain, strain))
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools view -bS -o %s.raw.bam %s.sam' %(strain, strain)) 
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools sort -m 1000000000 %s.raw.bam %s' %(strain, strain))
+        cmd.append("/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools view -h %s.bam | perl -lane 'if($F[11] =~ /^NM:i:(\d+)$/){print if $1<=2}else{print}'| /opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools view -bS - -o %s.NM2.bam" %(strain, strain))
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools index %s.bam' %(strain))
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools index %s.NM2.bam' %(strain))
+        cmd.append('/opt/linux/centos/7.x/x86_64/pkgs/samtools/0.1.19/bin/samtools mpileup %s.NM2.bam > %s.NM2.mpileup' %(strain, strain))
+        cmd.append('rm %s.raw.bam %s.sam %s_1.te_repeat.5_3_prime.fa %s_2.te_repeat.5_3_prime.fa %s_1.te_repeat.ContainingReads.fq %s_2.te_repeat.ContainingReads.fq %s_1.te_repeat.ContainingReads.fa %s_2.te_repeat.ContainingReads.fa %s_1.te_repeat.ContainingReads_middle.fa %s_2.te_repeat.ContainingReads_middle.fa' %(strain, strain, strain, strain, strain, strain, strain, strain, strain, strain))
         print >> ofile, '\n'.join(cmd)
         #cat fq_RelocaTE2/rufipogon_W1715_RelocaTE2/repeat/te_only_read_portions_fa/*.five_prime.fa > rufipogon_W1715_1.te_repeat.five_prime.fa
     ofile.close()
 
-    jobs_per_run = number_of_job_per
-    if number_of_unit > 30:
-        jobs_per_run = number_of_job_per*(int(number_of_unit/30))
-    print 'Total number of strains: %s' %(number_of_unit)
-    print 'Number of job per strain: %s' %(number_of_job_per)
-    print 'Number of job per run by qsub: %s' %(jobs_per_run)
-    runjob('run_ping_SNP.sh', jobs_per_run)
+    runjob('run_ping_SNP.sh', 240)
 
-
-'''
     #summary 16th SNP read count
     ofile = open('run_ping_SNP.16th_SNP.summary', 'w')
     mpileup_files = glob.glob('*.mpileup')
@@ -262,7 +243,7 @@ def main():
         print >> ofile_sum, '%s\t%s\t%s\t%s\t%s\t%s\t%s' %(strain, summary['Ping_reads'], str(len(ping_reads_class['G'].keys())), str(len(ping_reads_class['A'].keys())), summary['mPing_reads'], str(len(mping_reads_class['G'].keys())), str(len(mping_reads_class['A'].keys()))) 
     ofile_log.close()
     ofile_sum.close()
-'''
+
 if __name__ == '__main__':
     main()
 

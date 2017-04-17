@@ -223,10 +223,10 @@ def main():
   
     ofile = open('%s.Ping_Locus_16th_SNP.pop.summary' %(args.input), 'w')
     print >> ofile, 'Population\t3000\tPing\tPing_G\tPing_A'
-    for p in strain3k_sum.keys():
+    for p in sorted(strain3k_sum.keys()):
         ping_strains_temp = ping_strains_sum[p] if ping_strains_sum.has_key(p) else 'NA'
-        G_strains_temp = G_strains_sum[p] if G_strains_sum.has_key(p) else 'NA'
-        A_strains_temp = A_strains_sum[p] if A_strains_sum.has_key(p) else 'NA'
+        G_strains_temp = G_strains_sum[p] if G_strains_sum.has_key(p) else '0'
+        A_strains_temp = A_strains_sum[p] if A_strains_sum.has_key(p) else '0'
         print >> ofile, '%s\t%s\t%s\t%s\t%s' %(p, strain3k_sum[p], ping_strains_temp, G_strains_temp, A_strains_temp)
     ofile.close()
 
