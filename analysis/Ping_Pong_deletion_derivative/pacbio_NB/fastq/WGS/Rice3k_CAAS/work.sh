@@ -61,3 +61,23 @@ echo "rice strains may have intact Pong: 5164"
 #70% of Pong coverage, 3614=5164*0.7
 
 
+echo "faster"
+python Rice3k_Ping_Coverage.py --input rice_line_ALL_3000.anno.list.zero_ping50
+python Rice3k_Ping_Coverage_Pong.py --input rice_line_ALL_3000.anno.list.zero_ping50 --output pong_coverage_rice3000_MSU7.matrix
+python Ping_Coverage_matrix_ReOrder.py --ref ping_coverage_rice3000_MSU7.matrix.header --qry pong_coverage_rice3000_MSU7.matrix.header
+echo "Use RelocaTE2 mpileup"
+cut -f2,5 ~/Rice/Rice_population_sequence/Rice_3000/GigaScience/rice_line_3000.download.list | uniq | sed 's/IRIS/IRIS_/g' > rice_name_acc.list
+python Rice3k_Ping_Coverage_RelocaTE2.py --input rice_line_ALL_3000.anno.list > log 2>&1 &
+python Rice3k_Ping_Coverage_mPing_RelocaTE2.py --input rice_line_ALL_3000.anno.list --output mping_coverage_rice3000_MSU7.matrix > log 2>&1 &
+python Rice3k_Ping_Coverage_Pong_RelocaTE2.py --input rice_line_ALL_3000.anno.list --output pong_coverage_rice3000_MSU7.matrix > log 2>&1 &
+python Rice3k_Ping_Coverage_Actin.py --input rice_line_ALL_3000.anno.list --output actin_coverage_rice3000_MSU7.matrix > log 2>&1 &
+
+python Ping_Coverage_matrix_ReOrder.py --ref ping_coverage_rice3000_MSU7.matrix.header --qry mping_coverage_rice3000_MSU7.matrix.header
+python Ping_Coverage_matrix_ReOrder.py --ref ping_coverage_rice3000_MSU7.matrix.header --qry pong_coverage_rice3000_MSU7.matrix.header
+python Ping_Coverage_matrix_ReOrder.py --ref ping_coverage_rice3000_MSU7.matrix.header --qry actin_coverage_rice3000_MSU7.matrix.header
+
+echo "unfinished or bam errors?"
+awk '$2<1000' actin_coverage_rice3000_MSU7.matrix.header |sed 's/.actin.coverage.clean.txt//g' | cut -f1 > actin_coverage_rice3000_MSU7.matrix.unfinished.id
+python Ping_Coverage_matrix_remove_actin_unfinished.py --input actin_coverage_rice3000_MSU7.matrix.unfinished.id
+python Rice3k_Ping_Coverage_download_bam_Actin.py --input actin_coverage_rice3000_MSU7.matrix.unfinished.id > log 2>&1 &
+

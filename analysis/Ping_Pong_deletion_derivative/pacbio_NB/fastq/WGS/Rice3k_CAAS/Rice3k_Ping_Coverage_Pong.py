@@ -21,7 +21,8 @@ python CircosConf.py --input circos.config --output pipe.conf
 
 
 def runjob(script, lines):
-    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 100 --lines %s --interval 120 --resource nodes=1:ppn=1,walltime=20:00:00,mem=10G --convert no %s' %(lines, script)
+    #cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 100 --lines %s --interval 120 --resource nodes=1:ppn=1,walltime=20:00:00,mem=10G --convert no %s' %(lines, script)
+    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-slurm.pl --maxjob 100 --lines %s --interval 120 --task 1 --mem 15G --time 10:00:00 --convert no --queue intel %s' %(lines, script)
     #print cmd 
     os.system(cmd)
 
@@ -93,6 +94,8 @@ def ping_coverage_3k(infile):
     count = 0
     samtools = '/opt/linux/centos/7.x/x86_64/pkgs/samtools/1.3/bin/samtools'
     bedtools = '/rhome/cjinfeng/BigData/software/bedtools2-2.19.0/bin/bedtools'
+    bamtools = '/opt/linux/centos/7.x/x86_64/pkgs/bamtools/2.4.0/bin/bamtools'
+    bedpong  = '/rhome/cjinfeng/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_Pong_deletion_derivative/pacbio_NB/fastq/WGS/Rice3k_CAAS/genome.pong.bed'
     with open (infile, 'r') as filehd:
         for line in filehd:
             line = line.rstrip()
@@ -103,20 +106,20 @@ def ping_coverage_3k(infile):
                 coverage  = 'ping_coverage_3k/%s.pong.coverage.txt' %(acc)
                 coveragez = 'ping_coverage_3k/%s.ping.coverage.txt.gz' %(acc)
                 coverage1 = 'ping_coverage_3k/%s.pong.coverage.clean.txt' %(acc)
-                if not os.path.exists(coverage1) and os.path.exists(coveragez):
+                if not os.path.exists(coverage1):
                     #print coveragez
-                    if os.path.getsize(coveragez) == 0:
-                        continue
+                    cmd = '''%s view -b %s chr06:21719706-21726871 | %s view -h | awk '/^@|NM:i:0/' | %s view -b | %s coverage -abam stdin -b %s -d | awk '{print $1"\\t"$2+$4"\\t"$5}' > %s''' %(samtools, bam, samtools, samtools, bedtools, bedpong, os.path.abspath(coverage1))
+
                     #cmd = '%s view -b %s chr06 | %s genomecov -ibam stdin -d > %s' %(samtools, bam, bedtools, os.path.abspath(coverage))
                     #gz  = '/usr/bin/pigz %s -p 1' %(os.path.abspath(coverage))
-                    sed = 'zcat %s | awk -F"\\t" \'$2>21719706 && $2<21726871\' > %s' %(os.path.abspath(coveragez), os.path.abspath(coverage1))
+                    #sed = 'zcat %s | awk -F"\\t" \'$2>21719706 && $2<21726871\' > %s' %(os.path.abspath(coveragez), os.path.abspath(coverage1))
                     #print >> ofile, cmd
                     #print >> ofile, gz
-                    print >> ofile, sed
+                    print >> ofile, cmd
                     count += 1
     ofile.close()
-    #if count > 0:
-    #    runjob('pong_coverage.sh', 3)
+    if count > 0:
+        runjob('pong_coverage.sh', 300)
    
 def main():
     parser = argparse.ArgumentParser()

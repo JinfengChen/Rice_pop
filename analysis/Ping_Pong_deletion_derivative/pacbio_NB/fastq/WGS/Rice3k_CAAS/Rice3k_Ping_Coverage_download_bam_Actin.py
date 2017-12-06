@@ -21,7 +21,8 @@ python CircosConf.py --input circos.config --output pipe.conf
 
 
 def runjob(script, lines):
-    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 100 --lines %s --interval 120 --resource nodes=1:ppn=1,walltime=200:00:00,mem=10G --convert no %s' %(lines, script)
+    #cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 100 --lines %s --interval 120 --resource nodes=1:ppn=1,walltime=200:00:00,mem=10G --convert no %s' %(lines, script)
+    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-slurm.pl --maxjob 100 --lines %s --interval 120 --task 1 --mem 15G --time 10:00:00 --convert no --queue intel %s' %(lines, script)
     #print cmd 
     os.system(cmd)
 
@@ -94,6 +95,7 @@ def ping_coverage_3k(infile):
     count = 0
     samtools = '/opt/linux/centos/7.x/x86_64/pkgs/samtools/1.3/bin/samtools'
     bedtools = '/rhome/cjinfeng/BigData/software/bedtools2-2.19.0/bin/bedtools'
+    bedpong  = '/rhome/cjinfeng/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_Pong_deletion_derivative/pacbio_NB/fastq/WGS/Rice3k_CAAS/genome.actin.bed'
     with open (infile, 'r') as filehd:
         for line in filehd:
             line = line.rstrip()
@@ -105,22 +107,23 @@ def ping_coverage_3k(infile):
                 coverage  = 'ping_coverage_3k/%s.actin.coverage.txt' %(acc)
                 coveragez = 'ping_coverage_3k/%s.actin.coverage.txt.gz' %(acc)
                 coverage1 = 'ping_coverage_3k/%s.actin.coverage.clean.txt' %(acc)
-                if not os.path.exists(coverage1) or int(os.path.getsize(coverage1)) == 0:
+                if not os.path.exists(coverage1):
                 #if os.path.exists(local_bam) and int(os.path.getsize(coverage1)) == 0:
-                    down= 'wget %s -O %s' %(bam, os.path.abspath(local_bam))
-                    index = '%s index %s' %(samtools, os.path.abspath(local_bam))
-                    cmd = '%s view -b %s chr03 | %s genomecov -ibam stdin -d > %s' %(samtools, os.path.abspath(local_bam), bedtools, os.path.abspath(coverage))
-                    gz  = '/usr/bin/pigz %s -p 1 -f' %(os.path.abspath(coverage))
-                    sed = 'zcat %s | awk -F"\\t" \'$2>29071995 && $2<29077870\' > %s' %(os.path.abspath(coveragez), os.path.abspath(coverage1))
-                    print >> ofile, down
-                    print >> ofile, index
+                    #down= 'wget %s -O %s' %(bam, os.path.abspath(local_bam))
+                    #index = '%s index %s' %(samtools, os.path.abspath(local_bam))
+                    #cmd = '%s view -b %s chr03 | %s genomecov -ibam stdin -d > %s' %(samtools, os.path.abspath(local_bam), bedtools, os.path.abspath(coverage))
+                    cmd = '''%s view -b %s chr03:29071995-29077870 | %s view -h | awk '/^@|NM:i:0|NM:i:1|NM:i:2/' | %s view -b | %s coverage -abam stdin -b %s -d | awk '{print $1"\\t"$2+$4"\\t"$5}' > %s''' %(samtools, os.path.abspath(local_bam), samtools, samtools, bedtools, bedpong, os.path.abspath(coverage1))
+                    #gz  = '/usr/bin/pigz %s -p 1 -f' %(os.path.abspath(coverage))
+                    #sed = 'zcat %s | awk -F"\\t" \'$2>29071995 && $2<29077870\' > %s' %(os.path.abspath(coveragez), os.path.abspath(coverage1))
+                    #print >> ofile, down
+                    #print >> ofile, index
                     print >> ofile, cmd
-                    print >> ofile, gz
-                    print >> ofile, sed
+                    #print >> ofile, gz
+                    #print >> ofile, sed
                     count += 1
     ofile.close()
     if count > 0:
-        runjob('actin_coverage.sh', 5)
+        runjob('actin_coverage.sh', 1)
    
 def main():
     parser = argparse.ArgumentParser()

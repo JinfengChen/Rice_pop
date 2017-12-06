@@ -21,7 +21,8 @@ python CircosConf.py --input circos.config --output pipe.conf
 
 
 def runjob(script, lines):
-    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 100 --lines %s --interval 120 --resource nodes=1:ppn=1,walltime=200:00:00,mem=10G --convert no %s' %(lines, script)
+    #cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-pbs.pl --maxjob 100 --lines %s --interval 120 --resource nodes=1:ppn=1,walltime=200:00:00,mem=10G --convert no %s' %(lines, script)
+    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-slurm.pl --maxjob 100 --lines %s --interval 120 --task 1 --mem 15G --time 10:00:00 --convert no --queue intel %s' %(lines, script)
     #print cmd 
     os.system(cmd)
 
@@ -92,7 +93,9 @@ def ping_coverage_3k(infile):
     ofile = open('ping_coverage.sh', 'w')
     count = 0
     samtools = '/opt/linux/centos/7.x/x86_64/pkgs/samtools/1.3/bin/samtools'
+    bamtools = '/opt/linux/centos/7.x/x86_64/pkgs/bamtools/2.4.0/bin/bamtools'
     bedtools = '/rhome/cjinfeng/BigData/software/bedtools2-2.19.0/bin/bedtools'
+    bedping  = '/rhome/cjinfeng/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_Pong_deletion_derivative/pacbio_NB/fastq/WGS/Rice3k_CAAS/genome.ping.bed'
     with open (infile, 'r') as filehd:
         for line in filehd:
             line = line.rstrip()
@@ -104,16 +107,20 @@ def ping_coverage_3k(infile):
                 coveragez = 'ping_coverage_3k/%s.ping.coverage.txt.gz' %(acc)
                 coverage1 = 'ping_coverage_3k/%s.ping.coverage.clean.txt' %(acc)
                 if not os.path.exists(coverage1) or int(os.path.getsize(coverage1)) == 0:
-                    cmd = '%s view -b %s chr06 | %s genomecov -ibam stdin -d > %s' %(samtools, bam, bedtools, os.path.abspath(coverage))
-                    gz  = '/usr/bin/pigz %s -p 1 -f' %(os.path.abspath(coverage))
-                    sed = 'zcat %s | awk -F"\\t" \'$2>23520641 && $2<23527981\' > %s' %(os.path.abspath(coveragez), os.path.abspath(coverage1))
+                    #bedtools coverage -a test.bed -b genome.ping.bed -d
+                    cmd = '''%s view -b %s chr06:23520641-23527981 | %s view -h | awk '/^@|NM:i:0/' | %s view -b | %s coverage -abam stdin -b %s -d | awk '{print $1"\\t"$2+$4"\\t"$5}' > %s''' %(samtools, bam, samtools, samtools, bedtools, bedping, os.path.abspath(coverage1))
+                    #cmd = '%s view -b %s chr06 | %s filter -tag NM:0 -tag NM:1 | %s genomecov -ibam stdin -d > %s' %(samtools, bam, bamtools, bedtools, os.path.abspath(coverage))
+                    #cmd = '%s view -b %s chr06:23520641-23527981 | %s filter -tag NM:0 -tag NM:1 | %s genomecov -ibam stdin -d -g %s > %s' %(samtools, bam, bamtools, bedtools, bedping, os.path.abspath(coverage))
+                    #cmd = '%s view -b %s chr06 | %s genomecov -ibam stdin -d > %s' %(samtools, bam, bedtools, os.path.abspath(coverage))
+                    #gz  = '/usr/bin/pigz %s -p 1 -f' %(os.path.abspath(coverage))
+                    #sed = 'zcat %s | awk -F"\\t" \'$2>23520641 && $2<23527981\' > %s' %(os.path.abspath(coveragez), os.path.abspath(coverage1))
                     print >> ofile, cmd
-                    print >> ofile, gz
-                    print >> ofile, sed
+                    #print >> ofile, gz
+                    #print >> ofile, sed
                     count += 1
     ofile.close()
-    #if count > 0:
-    #    runjob('ping_coverage.sh', 3)
+    if count > 0:
+        runjob('ping_coverage.sh', 300)
    
 def main():
     parser = argparse.ArgumentParser()
@@ -134,6 +141,7 @@ def main():
     ping_coverage_3k(args.input)
 
     #####summarize coverage into matrix
+
     covs = glob.glob('%s/*.ping.coverage.clean.txt' %('ping_coverage_3k'))
     all_num = defaultdict(lambda : int())
     all_line= defaultdict(lambda : list())
@@ -142,12 +150,14 @@ def main():
         cov_num, cov_line = read_cov(cov)
         all_num[name]  = cov_num
         all_line[name] = cov_line
+        print name, cov_num
     ofile = open(args.output, 'w')
     ofile1 = open('%s.header' %(args.output), 'w') 
     for name, num in sorted(all_num.items(), key=lambda x:x[1]):
         print >> ofile1, '%s\t%s\t%s' %(name, num, '\t'.join(all_line[name]))
         print >> ofile, '\t'.join(all_line[name])
     ofile.close()
+
 
 if __name__ == '__main__':
     main()
