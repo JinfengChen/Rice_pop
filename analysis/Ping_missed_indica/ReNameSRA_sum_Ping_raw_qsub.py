@@ -118,6 +118,7 @@ def main():
     data = defaultdict(lambda : defaultdict(lambda : list)) 
     project = os.path.split(args.input)[1]
     sum_file = '%s.raw.summary' %(args.input)
+    strain_file = '%s.raw.summary.strains.list' %(args.input)
     sh_file  = '%s.raw.sh' %(args.input)
     ofile= open(sh_file, 'w')
     for call in sorted(os.listdir(args.input)):
@@ -132,6 +133,7 @@ def main():
     runjob(sh_file, 100)
 
     ofile = open(sum_file, 'w')
+    ofile1= open(strain_file, 'w')
     print >> ofile, 'Accession\tPing\tPing_NonRef\tPing_Ref\tName\tOrigin\tClass'
     for call in sorted(os.listdir(args.input)):
         dirname = os.path.abspath('%s/%s' %(args.input, call))
@@ -153,9 +155,13 @@ def main():
             if int(args.check) == 1 and (not os.path.exists('%s/repeat/results' %(dirname)) or not os.path.getsize(non_ref_gff) > 0):
                 print >> ofile, '%s\t%s\t%s\t%s\t%s\tNo output' %(call, call_ping, call_ref, call_nonref, call_inf)
             print >> ofile, '%s\t%s\t%s\t%s\t%s' %(call, call_ping, call_nonref_ping, call_ref_ping, call_inf)
+            if int(call_ping) > 0:
+                print >> ofile1, re.sub(r'IRIS', r'IRIS_', call_inf)
         elif args.call == 'TEMP':
             pass
-    ofile.close() 
+    ofile.close()
+    ofile1.close()
+    os.system('python sum_pop_distri_general.py --input %s' %(strain_file)) 
 
 if __name__ == '__main__':
     main()

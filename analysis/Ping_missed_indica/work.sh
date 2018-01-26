@@ -23,12 +23,15 @@ python RunRelocaTEi_CombinedGFF.py --input Test_Ping
 echo "Rerun Ping on 3k"
 cp -R ../High_Ping_Indonesia_group/Rice3k_3000_RelocaTEi_Ping/*_RelocaTEi/ ./ &
 #python ReNameSRA_sum_Ping_raw.py --input Rice3k_3000_RelocaTEi_Ping_Rerun
-python ReNameSRA_sum_Ping_raw_qsub.py --input Rice3k_3000_RelocaTEi_Ping_Rerun
+python ReNameSRA_sum_Ping_raw_qsub.py --input Rice3k_3000_RelocaTEi_Ping_Rerun > log 2>&1 &
 python RunRelocaTEi_CombinedGFF_raw.py --input Rice3k_3000_RelocaTEi_Ping_Rerun
 python ReNameSRA_sum_Ping.py --input Rice3k_3000_RelocaTEi_Ping_Rerun --gff Rice3k_3000_RelocaTEi_Ping_Rerun.CombinedGFF.ALL_raw.gff
 python RunRelocaTEi_CombinedGFF.py --input Rice3k_3000_RelocaTEi_Ping_Rerun
 
-#Ping strain list
+#Ping strain list, get Ping from 241 strain and valid by read coverage
 awk '$2>0' Rice3k_3000_RelocaTEi_Ping_Rerun.raw.summary | cut -f5| sed 's/IRIS/IRIS_/g' | grep -v "Name" > Rice3k_3000_RelocaTEi_Ping_Rerun.raw.summary.strains.list
 python sum_pop_distri_general.py --input Rice3k_3000_RelocaTEi_Ping_Rerun.raw.summary.strains.list
-
+python ../Compare_RelocaTE2_depth_Ping/listdiff.py Rice3k_3000_RelocaTEi_Ping_Rerun.raw.summary.strains.list ../Compare_RelocaTE2_depth_Ping/RelocaTE2_Depth_Ping.txt.list| grep "list2" -c
+cd ../Zero_mPing_Strain/
+cut -f1 ../Ping_missed_indica/Rice3k_3000_RelocaTEi_Ping_Rerun.raw.summary.strains.list > ALL_test_strains.list
+cat ALL_test_plot.R | R --slave

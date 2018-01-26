@@ -98,7 +98,8 @@ def gff_parse(infile, flank_inf, support_inf):
                 if (len(left_supporting_picks[repid].keys()) + len(right_supporting_picks[repid].keys()) + len(junction_picks[repid].keys())) < 0.1*(Rjun + Rsup + Ljun + Lsup):
                 #    #ping supporting reads more than 10% of total supporing reads
                     continue
-                if len(left_supporting_picks[repid].keys()) + len(junction_picks[repid].keys()) > 1 and len(right_supporting_picks[repid].keys()) + len(junction_picks[repid].keys()) > 1:
+                read_cut = 5
+                if len(left_supporting_picks[repid].keys()) + len(junction_picks[repid].keys()) >= read_cut and len(right_supporting_picks[repid].keys()) + len(junction_picks[repid].keys()) >= read_cut:
                     #print 'Find Pong: %s' %(line)
                     #if (chro == 'Chr1' and  start == 38092038) or (chro == 'Chr12' and start == 24587180):
                     if (chro == 'Chr1' and start > 38092619 - 10 and start < 38092619 + 10) or (chro == 'Chr12' and start > 24587180 - 10 and start < 24587190 + 10):
@@ -111,7 +112,7 @@ def gff_parse(infile, flank_inf, support_inf):
                             ping_special = 1
                     else:
                         print >> ofile, line 
-                elif len(left_supporting_picks[repid].keys()) + len(junction_picks[repid].keys()) > 1 or len(right_supporting_picks[repid].keys()) + len(junction_picks[repid].keys()) > 1:
+                elif len(left_supporting_picks[repid].keys()) + len(junction_picks[repid].keys()) >= read_cut or len(right_supporting_picks[repid].keys()) + len(junction_picks[repid].keys()) >= read_cut:
                     #print 'Candidate Pong: %s' %(line)
                     #if (chro == 'Chr1' and  start == 38092038) or (chro == 'Chr12' and start == 24587180):
                     if (chro == 'Chr1' and  start > 38092619 - 10 and start < 38092619 + 10) or (chro == 'Chr12' and start > 24587180 - 10 and start < 24587190 + 10):
@@ -143,7 +144,7 @@ def check_supporting_reads(reads_list, repid, flank_inf, ofile_log):
     start_int      = 253
     end_int        = 5164
     start_snp      = 16
-    flank = 10
+    flank = 50
     if len(reads_list) > 0:
         for read in reads_list:
             for i in [1, 2]:
@@ -170,6 +171,7 @@ def check_supporting_reads(reads_list, repid, flank_inf, ofile_log):
                              data[repid][read] = 1
                              print >> ofile_log, 'Midlle reads: %s' %(read)
                         elif int(flank_inf[read][str(i)]['end']) >= start_int+flank and int(flank_inf[read][str(i)]['end']) <= end_int-flank:
+                        #if int(flank_inf[read][str(i)]['start']) >= start_int+flank and int(flank_inf[read][str(i)]['start']) <= end_int-flank and int(flank_inf[read][str(i)]['end']) >= start_int+flank and int(flank_inf[read][str(i)]['end']) <= end_int-flank:
                              data[repid][read] = 1
                              print >> ofile_log, 'Midlle reads: %s' %(read)
                     #    elif int(flank_inf[read][str(i)]['start']) < start_snp - 10 and int(flank_inf[read][str(i)]['end']) > start_snp + 10 and int(flank_inf[read][str(i)]['mismatch']) == 0:

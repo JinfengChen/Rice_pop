@@ -80,9 +80,9 @@ def parse_class_gff(infile):
 
 #Chr1	not.give	RelocaTE_i	2129220	2129222	.	.	.	
 #ID=repeat_Chr1_2129220_2129222;TSD=TAA;Right_junction_reads:1;Left_junction_reads:1;Right_support_reads:0;Left_support_reads:0;
-def parse_gff(infile, ril_id, ofile):
+def parse_gff(infile, ril_id, ofile, loci):
     ril_name = 'ERS%s' %(ril_id)
-    r = re.compile(r'supporting_junction')
+    r = re.compile(r'supporting_junction|insufficient_data')
     with open (infile, 'r') as filehd:
         for line in filehd:
             line = line.rstrip()
@@ -94,12 +94,16 @@ def parse_gff(infile, ril_id, ofile):
                 anno.insert(1, 'Strain=%s' %(ril_name))
                 unit[8] = ';'.join(anno)
                 if not r.search(line):
-                    print >> ofile, '\t'.join(unit)
+                    mping = '%s:%s-%s' %(unit[0], unit[3], unit[4])
+                    if not loci.has_key(mping):
+                        print >> ofile, '\t'.join(unit)
+                        loci[mping] = 1
                 #rj   = re.sub(r'Right_junction_reads:', '', anno[2])
                 #lj   = re.sub(r'Left_junction_reads:', '', anno[3])
                 #rs   = re.sub(r'Right_support_reads:', '', anno[4])
                 #ls   = re.sub(r'Left_support_reads:', '', anno[5])
-                
+    return loci              
+  
 
 def main():
     parser = argparse.ArgumentParser()
@@ -115,6 +119,7 @@ def main():
 
     #RIL275_RelocaTEi/RelocaTEi_GN1/repeat/results/ALL.all_nonref_insert.gff 
     data    = defaultdict(lambda : list())
+    loci    = defaultdict(lambda : str())
     #output0 = '%s.CombinedGFF.characterized.gff' %(args.input)
     output1 = '%s.CombinedGFF.ALL_raw.gff' %(args.input)
     #ofile0  = open(output0, 'w')
@@ -126,7 +131,7 @@ def main():
         gff       = '%s/repeat/results/ALL.all_nonref_insert.Ping.raw.gff' %(d)
         #gff_class = '%s/repeat/results/ALL.all_nonref_insert.characTErized.gff' %(d)
         if os.path.exists(gff):
-            parse_gff(gff, ril_id, ofile1)
+            loci = parse_gff(gff, ril_id, ofile1, loci)
         #parse_gff(gff_class, ril_id, ofile0)
     #ofile0.close()
     ofile1.close()
