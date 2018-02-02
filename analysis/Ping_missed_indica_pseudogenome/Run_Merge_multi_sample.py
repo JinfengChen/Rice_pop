@@ -103,7 +103,11 @@ def main():
     strain_dirs = glob.glob("%s/*" %(args.fastq_dir))
     ofile = open('run_merging.sh', 'w')
     for strain_dir in sorted(strain_dirs):
+        if strain_dir.endswith(r'gz'):
+            continue
         #print >> ofile, strain_dir
+        if os.path.exists('%s_1.fastq.gz' %(os.path.abspath(strain_dir))):
+            continue
         strain_dir = os.path.abspath(strain_dir)
         strain     = os.path.abspath(strain_dir)
         strain_fq1, strain_fq2 = read_fastq(strain_dir)

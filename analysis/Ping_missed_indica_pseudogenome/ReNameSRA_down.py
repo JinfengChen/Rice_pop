@@ -24,7 +24,7 @@ def fasta_id(fastafile):
 
 
 def runjob(script, lines):
-    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-slurm.pl --maxjob 30 --lines %s --interval 120 --task 1 --mem 5G --time 100:00:00 --convert no %s' %(lines, script)
+    cmd = 'perl /rhome/cjinfeng/BigData/software/bin/qsub-slurm.pl --maxjob 30 --lines %s --interval 120 --task 1 --mem 5G --time 20:00:00 --convert no %s' %(lines, script)
     #print cmd 
     os.system(cmd)
 
@@ -138,7 +138,7 @@ def main():
 
     #read_link('stowaway_check_candidate_fq.status.insertion.list.download.list', outdir)
     #read_link('Ping_test.list.download.list', outdir)
-    read_link('RelocaTE2_Depth_Ping1.txt.download.list', outdir)
+    read_link('RelocaTE2_Depth_Ping2.txt.download.list', outdir)
 
     #runjob('down.sh', 100) #more than 1000 jobs
     runjob('down.sh', 2) #more than 1000 jobs
