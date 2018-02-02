@@ -27,7 +27,10 @@ echo "N: $N"
 admixture=/rhome/cjinfeng/BigData/software/ADMIXTURE/admixture_linux-1.3.0/admixture
 
 #reorder Qmatrix
-python Reorder_Q.py --strain_list core_v0.7.pruneddata3.structure.nosex --meanQ_list core_v0.7.pruneddata3.$N\.Q --reorder_list 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree.tip.label.txt
+#python Reorder_Q.py --strain_list core_v0.7.pruneddata3.structure.nosex --meanQ_list core_v0.7.pruneddata3.$N\.Q --reorder_list 3K_coreSNP-v2.1.binary.tab.landrace.nj.tree.tip.label.txt
+#reorder using Q8 pop
+python Sort_ClusterQ8.py --strain_list core_v0.7.pruneddata3.structure.nosex --meanQ_list core_v0.7.pruneddata3.8.Q | sort -k2,2nr -k4,4n -k5,5n > core_v0.7.pruneddata3.8.Q.sorted.txt
+python Reorder_Q.py --strain_list core_v0.7.pruneddata3.structure.nosex --meanQ_list core_v0.7.pruneddata3.$N\.Q --reorder_list core_v0.7.pruneddata3.8.Q.sorted.txt
 #defined color for each cluster based on predefined color
 python Summary_Cluster_Color.py --strain_list core_v0.7.pruneddata3.structure.nosex --meanQ_list core_v0.7.pruneddata3.$N\.Q
 

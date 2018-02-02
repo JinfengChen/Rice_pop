@@ -17,6 +17,13 @@ sbatch --array 2-15 run_ADMIXTURE_reorder.sh
 python Sort_ClusterQ8.py --strain_list core_v0.7.pruneddata3.structure.nosex --meanQ_list core_v0.7.pruneddata3.8.Q | sort -k2,2nr -k4,4n -k5,5n > core_v0.7.pruneddata3.8.Q.sorted.txt
 python Reorder_Q.py --strain_list core_v0.7.pruneddata3.structure.nosex --meanQ_list core_v0.7.pruneddata3.8.Q --reorder_list core_v0.7.pruneddata3.8.Q.sorted.txt
 cat single_run_colored_defined.R | R --slave
+sbatch --array 2-15 run_ADMIXTURE_reorder.sh
+
+echo "plot"
+#rainbow color
+cat multi_run_raw.R | R --slave
+#defined Q8 color
+cat multi_run_color_defined.R | R --slave
 
 echo "add barplot into 3k tree"
 cp ~/Rice/Rice_population_sequence/Rice_3000/Manuscript/figure/Figure2_3000_rice_tree/3K_coreSNP-v2.1.binary.tab.landrace.nj.landrace.tree_mPing_Ping_Pong.R ./
