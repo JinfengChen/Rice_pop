@@ -108,6 +108,14 @@ awk '$5!~/covered/ && $6~/covered/' Ping_1491bp_status.txt > Ping_1491bp_status.
 awk '$5~/covered/ && $6!~/covered/' Ping_1491bp_status.txt > Ping_1491bp_status.txt.No_2.list
 awk '$5!~/covered/ && $6!~/covered/' Ping_1491bp_status.txt > Ping_1491bp_status.txt.No_3.list
 
+#
+cat Ping_1491bp_status.txt.insertion.list Ping_1491bp_status.txt.No_1.list Ping_1491bp_status.txt.No_2.list > Ping_1491bp_status.insertion_No1_2.txt
+cut -f2 Ping_1491bp_status.insertion_No1_2.txt > Ping_1491bp_status.insertion_No1_2.acc.txt
+#3 of 108 is not new
+python ~/BigData/software/bin/listdiff.py Ping_1491bp_status.insertion_No1_2.acc.txt ../../Zero_mPing_Strain/RelocaTE2_Depth_Ping.Only.txt | less -S
+awk '{print $1"\tChr13\t1479\t1482\t+"}' Ping_1491bp_status.insertion_No1_2.txt > Ping_1491bp_status.insertion_No1_2.PreGFF.list
+
+
 echo "who else missed"
 #213 missed by RelocaTE2
 python ~/BigData/software/bin/listdiff.py ../Zero_mPing_Strain/RelocaTE2_Depth_Ping.txt ../Ping_missed_indica/Rice3k_3000_RelocaTEi_Ping_Rerun.raw.summary.strains.list| grep "list1" | cut -d" " -f4 > ../Zero_mPing_Strain/RelocaTE2_Depth_Ping.Only.txt
@@ -167,6 +175,71 @@ cd Ping_test_Round1
 ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_3230_recall/Ping_test/*.gz ./
 cd ..  
 python Run_Map_multi_sample.py --fastq_dir Ping_test_Round1 --genome Ping_Round1_Pseudo.fa > log 2>&1 &
+#assemble
+cd Ping_test_local_assembly
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_3230_recall/Ping_test_Round1/ ./
+python Get_List_Raw_Fastq_runner_Ping.py --input Ping_test_Round1 > log 2>&1 &
+cd Ping_test_Round1
+cat *.upreads_1.fq > test_upreads_1.fq
+cat *.upreads_2.fq > test_upreads_2.fq
+cat *.downreads_1.fq > test_downreads_1.fq
+cat *.downreads_2.fq > test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_upreads.assembly 31 -shortPaired -fastq -separate test_upreads_1.fq test_upreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_upreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_downreads.assembly 31 -shortPaired -fastq -separate test_downreads_1.fq test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_downreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+#Round2
+cat up_round2.fa ping_trun.fa down_round2.fa > Ping_Round2_Pseudo.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round2_Pseudo.fa > Ping_Round2_Pseudo_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round2_Pseudo.fa
+mkdir Ping_test_Round2
+cd Ping_test_Round2
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_3230_recall/Ping_test/*.gz ./
+cd ..  
+python Run_Map_multi_sample.py --fastq_dir Ping_test_Round2 --genome Ping_Round2_Pseudo.fa > log 2>&1 &
+#assemble
+cd Ping_test_local_assembly
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_3230_recall/Ping_test_Round2/ ./
+python Get_List_Raw_Fastq_runner_Ping.py --input Ping_test_Round2 > log 2>&1 &
+cd Ping_test_Round2
+cat *.upreads_1.fq > test_upreads_1.fq
+cat *.upreads_2.fq > test_upreads_2.fq
+cat *.downreads_1.fq > test_downreads_1.fq
+cat *.downreads_2.fq > test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_upreads.assembly 31 -shortPaired -fastq -separate test_upreads_1.fq test_upreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_upreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_downreads.assembly 31 -shortPaired -fastq -separate test_downreads_1.fq test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_downreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+#Round3, just for building pseudogenome
+cat up_round3.fa ping_trun.fa down_round3.fa > Ping_Round3_Pseudo.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round3_Pseudo.fa > Ping_Round3_Pseudo_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round3_Pseudo.fa
+cat up_round3.fa down_round3.fa > Ping_Round3_Pseudo_noPing.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round3_Pseudo_noPing.fa > Ping_Round3_Pseudo_noPing_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round3_Pseudo_noPing.fa
+#map to pseudo with ping
+mkdir Ping_Depth_Psuedo_Ping_bam
+cd Ping_Depth_Psuedo_Ping_bam
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/*.fastq.gz ./
+python Run_Map_multi_sample.py --fastq_dir Ping_Depth_Psuedo_Ping_bam --genome Ping_Round3_Pseudo.fa > log 2>&1 &
+#map to pseduo without ping
+mkdir Ping_Depth_Psuedo_noPing_bam
+cd Ping_Depth_Psuedo_noPing_bam
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/*.fastq.gz ./
+python Run_Map_multi_sample.py --fastq_dir Ping_Depth_Psuedo_noPing_bam --genome Ping_Round3_Pseudo_noPing.fa > log 2>&1 &
+echo "Ping 3230 bp status, Ping_up:516-3747, Ping_up:516-517"
+python mPing_Boundary_Coverage_Ping_3230bp.py --bam_ref Ping_Depth_Psuedo_noPing_bam --bam_pseudo Ping_Depth_Psuedo_Ping_bam > Ping_3230bp_status.txt
+awk '$5~/covered/ && $6~/covered/' Ping_3230bp_status.txt > Ping_3230bp_status.txt.insertion.list
+awk '$5!~/covered/ && $6~/covered/' Ping_3230bp_status.txt > Ping_3230bp_status.txt.No_1.list
+awk '$5~/covered/ && $6!~/covered/' Ping_3230bp_status.txt > Ping_3230bp_status.txt.No_2.list
+awk '$5!~/covered/ && $6!~/covered/' Ping_3230bp_status.txt > Ping_3230bp_status.txt.No_3.list
+#final list of strain having Ping 3230
+cat Ping_3230bp_status.txt.insertion.list Ping_3230bp_status.txt.No_1.list Ping_3230bp_status.txt.No_2.list > Ping_3230bp_status.insertion_No1_2.txt
+
+#1 of 21 is not new
+cut -f2 Ping_3230bp_status.insertion_No1_2.txt > Ping_3230bp_status.insertion_No1_2.acc.txt
+python ~/BigData/software/bin/listdiff.py Ping_3230bp_status.insertion_No1_2.acc.txt ../../Zero_mPing_Strain/RelocaTE2_Depth_Ping.Only.txt | less -S
+awk '{print $1"\tChr13\t3230\t3230\t+"}' Ping_3230bp_status.insertion_No1_2.txt > Ping_3230bp_status.insertion_No1_2.PreGFF.list
 
 
 echo "echo Ping_1646_recall"
@@ -223,6 +296,70 @@ cd Ping_test_Round1
 ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_1645_recall/Ping_test/*.gz ./
 cd ..  
 python Run_Map_multi_sample.py --fastq_dir Ping_test_Round1 --genome Ping_Round1_Pseudo.fa > log 2>&1 &
+#assemble
+cd Ping_test_local_assembly
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_1645_recall/Ping_test_Round1/ ./
+python Get_List_Raw_Fastq_runner_Ping.py --input Ping_test_Round1 > log 2>&1 &
+cd Ping_test_Round1
+cat *.upreads_1.fq > test_upreads_1.fq
+cat *.upreads_2.fq > test_upreads_2.fq
+cat *.downreads_1.fq > test_downreads_1.fq
+cat *.downreads_2.fq > test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_upreads.assembly 31 -shortPaired -fastq -separate test_upreads_1.fq test_upreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_upreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_downreads.assembly 31 -shortPaired -fastq -separate test_downreads_1.fq test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_downreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+#Round2
+cat up_round2.fa ping_trun.fa down_round2.fa > Ping_Round2_Pseudo.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round2_Pseudo.fa > Ping_Round2_Pseudo_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round2_Pseudo.fa
+mkdir Ping_test_Round2
+cd Ping_test_Round2
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_1645_recall/Ping_test/*.gz ./
+cd ..  
+python Run_Map_multi_sample.py --fastq_dir Ping_test_Round2 --genome Ping_Round2_Pseudo.fa > log 2>&1 &
+#assemble
+cd Ping_test_local_assembly
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_1645_recall/Ping_test_Round2/ ./
+python Get_List_Raw_Fastq_runner_Ping.py --input Ping_test_Round2 > log 2>&1 &
+cd Ping_test_Round2
+cat *.upreads_1.fq > test_upreads_1.fq
+cat *.upreads_2.fq > test_upreads_2.fq
+cat *.downreads_1.fq > test_downreads_1.fq
+cat *.downreads_2.fq > test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_upreads.assembly 31 -shortPaired -fastq -separate test_upreads_1.fq test_upreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_upreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_downreads.assembly 31 -shortPaired -fastq -separate test_downreads_1.fq test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_downreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+#Round3, just for building pseudogenome
+cat up_round3.fa ping_trun.fa down_round3.fa > Ping_Round3_Pseudo.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round3_Pseudo.fa > Ping_Round3_Pseudo_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round3_Pseudo.fa
+cat up_round3.fa down_round3.fa > Ping_Round3_Pseudo_noPing.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round3_Pseudo_noPing.fa > Ping_Round3_Pseudo_noPing_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round3_Pseudo_noPing.fa
+#map to pseudo with ping
+mkdir Ping_Depth_Psuedo_Ping_bam
+cd Ping_Depth_Psuedo_Ping_bam
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/*.fastq.gz ./
+python Run_Map_multi_sample.py --fastq_dir Ping_Depth_Psuedo_Ping_bam --genome Ping_Round3_Pseudo.fa > log 2>&1 &
+#map to pseduo without ping
+mkdir Ping_Depth_Psuedo_noPing_bam
+cd Ping_Depth_Psuedo_noPing_bam
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/*.fastq.gz ./
+python Run_Map_multi_sample.py --fastq_dir Ping_Depth_Psuedo_noPing_bam --genome Ping_Round3_Pseudo_noPing.fa > log 2>&1 &
+echo "Ping 1645 bp status, Ping_up:928-2555, Ping_up:928-929"
+python mPing_Boundary_Coverage_Ping_1645bp.py --bam_ref Ping_Depth_Psuedo_noPing_bam --bam_pseudo Ping_Depth_Psuedo_Ping_bam > Ping_1645bp_status.txt
+awk '$5~/covered/ && $6~/covered/' Ping_1645bp_status.txt > Ping_1645bp_status.txt.insertion.list
+awk '$5!~/covered/ && $6~/covered/' Ping_1645bp_status.txt > Ping_1645bp_status.txt.No_1.list
+awk '$5~/covered/ && $6!~/covered/' Ping_1645bp_status.txt > Ping_1645bp_status.txt.No_2.list
+awk '$5!~/covered/ && $6!~/covered/' Ping_1645bp_status.txt > Ping_1645bp_status.txt.No_3.list
+#final list of strain having Ping 1645
+cat Ping_1645bp_status.txt.insertion.list Ping_1645bp_status.txt.No_1.list Ping_1645bp_status.txt.No_2.list > Ping_1645bp_status.insertion_No1_2.txt
+#all 12 are found 
+cut -f2 Ping_1645bp_status.insertion_No1_2.txt > Ping_1645bp_status.insertion_No1_2.acc.txt
+python ~/BigData/software/bin/listdiff.py Ping_1645bp_status.insertion_No1_2.acc.txt ../../Zero_mPing_Strain/RelocaTE2_Depth_Ping.Only.txt | less -S
+
 
 echo "echo Ping_1321_recall"
 awk '$2>1310 && $2<1321' ../Zero_mPing_Strain/ping_3k_NM2.txt | cut -f1 > Ping_test.1321.list
@@ -279,8 +416,70 @@ cd Ping_test_Round1
 ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_1321_recall/Ping_test/*.gz ./
 cd ..  
 python Run_Map_multi_sample.py --fastq_dir Ping_test_Round1 --genome Ping_Round1_Pseudo.fa > log 2>&1 &
-
-
+#assemble
+cd Ping_test_local_assembly
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_1321_recall/Ping_test_Round1/ ./
+python Get_List_Raw_Fastq_runner_Ping.py --input Ping_test_Round1 > log 2>&1 &
+cd Ping_test_Round1
+cat *.upreads_1.fq > test_upreads_1.fq
+cat *.upreads_2.fq > test_upreads_2.fq
+cat *.downreads_1.fq > test_downreads_1.fq
+cat *.downreads_2.fq > test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_upreads.assembly 31 -shortPaired -fastq -separate test_upreads_1.fq test_upreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_upreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_downreads.assembly 31 -shortPaired -fastq -separate test_downreads_1.fq test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_downreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+#Round2
+cat up_round2.fa ping_trun.fa down_round2.fa > Ping_Round2_Pseudo.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round2_Pseudo.fa > Ping_Round2_Pseudo_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round2_Pseudo.fa
+mkdir Ping_test_Round2
+cd Ping_test_Round2
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_1321_recall/Ping_test/*.gz ./
+cd ..  
+python Run_Map_multi_sample.py --fastq_dir Ping_test_Round2 --genome Ping_Round2_Pseudo.fa > log 2>&1 &
+#assemble
+cd Ping_test_local_assembly
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_1321_recall/Ping_test_Round2/ ./
+python Get_List_Raw_Fastq_runner_Ping.py --input Ping_test_Round2 > log 2>&1 &
+cd Ping_test_Round2
+cat *.upreads_1.fq > test_upreads_1.fq
+cat *.upreads_2.fq > test_upreads_2.fq
+cat *.downreads_1.fq > test_downreads_1.fq
+cat *.downreads_2.fq > test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_upreads.assembly 31 -shortPaired -fastq -separate test_upreads_1.fq test_upreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_upreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_downreads.assembly 31 -shortPaired -fastq -separate test_downreads_1.fq test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_downreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+#Round3, just for building pseudogenome
+cat up_round3.fa ping_trun.fa down_round3.fa > Ping_Round3_Pseudo.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round3_Pseudo.fa > Ping_Round3_Pseudo_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round3_Pseudo.fa
+cat up_round3.fa down_round3.fa > Ping_Round3_Pseudo_noPing.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round3_Pseudo_noPing.fa > Ping_Round3_Pseudo_noPing_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round3_Pseudo_noPing.fa
+#map to pseudo with ping
+mkdir Ping_Depth_Psuedo_Ping_bam
+cd Ping_Depth_Psuedo_Ping_bam
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/*.fastq.gz ./
+python Run_Map_multi_sample.py --fastq_dir Ping_Depth_Psuedo_Ping_bam --genome Ping_Round3_Pseudo.fa > log 2>&1 &
+#map to pseduo without ping
+mkdir Ping_Depth_Psuedo_noPing_bam
+cd Ping_Depth_Psuedo_noPing_bam
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/*.fastq.gz ./
+python Run_Map_multi_sample.py --fastq_dir Ping_Depth_Psuedo_noPing_bam --genome Ping_Round3_Pseudo_noPing.fa > log 2>&1 &
+echo "Ping 1321 bp status, Ping_up:1322-2640, Ping_up:1322-1323"
+python mPing_Boundary_Coverage_Ping_1321bp.py --bam_ref Ping_Depth_Psuedo_noPing_bam --bam_pseudo Ping_Depth_Psuedo_Ping_bam > Ping_1321bp_status.txt
+awk '$5~/covered/ && $6~/covered/' Ping_1321bp_status.txt > Ping_1321bp_status.txt.insertion.list
+awk '$5!~/covered/ && $6~/covered/' Ping_1321bp_status.txt > Ping_1321bp_status.txt.No_1.list
+awk '$5~/covered/ && $6!~/covered/' Ping_1321bp_status.txt > Ping_1321bp_status.txt.No_2.list
+awk '$5!~/covered/ && $6!~/covered/' Ping_1321bp_status.txt > Ping_1321bp_status.txt.No_3.list
+#final list of strain having Ping 1321
+cat Ping_1321bp_status.txt.insertion.list Ping_1321bp_status.txt.No_1.list Ping_1321bp_status.txt.No_2.list > Ping_1321bp_status.insertion_No1_2.txt
+cut -f2 Ping_1321bp_status.insertion_No1_2.txt > Ping_1321bp_status.insertion_No1_2.acc.txt
+#2 of 12 not new
+python ~/BigData/software/bin/listdiff.py Ping_1321bp_status.insertion_No1_2.acc.txt ../../Zero_mPing_Strain/RelocaTE2_Depth_Ping.Only.txt
+awk '{print $1"\tChr13\t1321\t1324\t+"}' Ping_1321bp_status.insertion_No1_2.txt > Ping_1321bp_status.insertion_No1_2.PreGFF.list
 
 
 echo "echo Ping_1200_recall"
@@ -338,5 +537,192 @@ cd Ping_test_Round1
 ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_1200_recall/Ping_test/*.gz ./
 cd ..  
 python Run_Map_multi_sample.py --fastq_dir Ping_test_Round1 --genome Ping_Round1_Pseudo.fa > log 2>&1 &
+#assemble
+cd Ping_test_local_assembly
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_1200_recall/Ping_test_Round1/ ./
+python Get_List_Raw_Fastq_runner_Ping.py --input Ping_test_Round1 > log 2>&1 &
+cd Ping_test_Round1
+cat *.upreads_1.fq > test_upreads_1.fq
+cat *.upreads_2.fq > test_upreads_2.fq
+cat *.downreads_1.fq > test_downreads_1.fq
+cat *.downreads_2.fq > test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_upreads.assembly 31 -shortPaired -fastq -separate test_upreads_1.fq test_upreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_upreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_downreads.assembly 31 -shortPaired -fastq -separate test_downreads_1.fq test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_downreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+#Round2
+cat up_round2.fa ping_trun.fa down_round2.fa > Ping_Round2_Pseudo.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round2_Pseudo.fa > Ping_Round2_Pseudo_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round2_Pseudo.fa
+mkdir Ping_test_Round2
+cd Ping_test_Round2
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_1200_recall/Ping_test/*.gz ./
+cd ..  
+python Run_Map_multi_sample.py --fastq_dir Ping_test_Round2 --genome Ping_Round2_Pseudo.fa > log 2>&1 &
+#assemble
+cd Ping_test_local_assembly
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_1200_recall/Ping_test_Round2/ ./
+python Get_List_Raw_Fastq_runner_Ping.py --input Ping_test_Round2 > log 2>&1 &
+cd Ping_test_Round2
+cat *.upreads_1.fq > test_upreads_1.fq
+cat *.upreads_2.fq > test_upreads_2.fq
+cat *.downreads_1.fq > test_downreads_1.fq
+cat *.downreads_2.fq > test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_upreads.assembly 31 -shortPaired -fastq -separate test_upreads_1.fq test_upreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_upreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velveth test_downreads.assembly 31 -shortPaired -fastq -separate test_downreads_1.fq test_downreads_2.fq
+/rhome/cjinfeng/BigData/software/Velvet/velvet/velvetg test_downreads.assembly -ins_length 400 -exp_cov 50 -min_contig_lgth 200 -scaffolding yes
+#Round3, just for building pseudogenome
+cat up_round3.fa ping_trun.fa down_round3.fa > Ping_Round3_Pseudo.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round3_Pseudo.fa > Ping_Round3_Pseudo_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round3_Pseudo.fa
+cat up_round3.fa down_round3.fa > Ping_Round3_Pseudo_noPing.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round3_Pseudo_noPing.fa > Ping_Round3_Pseudo_noPing_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round3_Pseudo_noPing.fa
+#map to pseudo with ping
+mkdir Ping_Depth_Psuedo_Ping_bam
+cd Ping_Depth_Psuedo_Ping_bam
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/*.fastq.gz ./
+python Run_Map_multi_sample.py --fastq_dir Ping_Depth_Psuedo_Ping_bam --genome Ping_Round3_Pseudo.fa > log 2>&1 &
+#map to pseduo without ping
+mkdir Ping_Depth_Psuedo_noPing_bam
+cd Ping_Depth_Psuedo_noPing_bam
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/*.fastq.gz ./
+python Run_Map_multi_sample.py --fastq_dir Ping_Depth_Psuedo_noPing_bam --genome Ping_Round3_Pseudo_noPing.fa > log 2>&1 &
+echo "Ping 1200 bp status, Ping_up:1295-2263, Ping_up:1295-1296"
+python mPing_Boundary_Coverage_Ping_1200bp.py --bam_ref Ping_Depth_Psuedo_noPing_bam --bam_pseudo Ping_Depth_Psuedo_Ping_bam > Ping_1200bp_status.txt
+awk '$5~/covered/ && $6~/covered/' Ping_1200bp_status.txt > Ping_1200bp_status.txt.insertion.list
+awk '$5!~/covered/ && $6~/covered/' Ping_1200bp_status.txt > Ping_1200bp_status.txt.No_1.list
+awk '$5~/covered/ && $6!~/covered/' Ping_1200bp_status.txt > Ping_1200bp_status.txt.No_2.list
+awk '$5!~/covered/ && $6!~/covered/' Ping_1200bp_status.txt > Ping_1200bp_status.txt.No_3.list
+#final list of strain having Ping 1200
+cat Ping_1200bp_status.txt.insertion.list Ping_1200bp_status.txt.No_1.list Ping_1200bp_status.txt.No_2.list > Ping_1200bp_status.insertion_No1_2.txt
+cut -f2 Ping_1200bp_status.insertion_No1_2.txt > Ping_1200bp_status.insertion_No1_2.acc.txt
+#all these 22 strain have new
+python ~/BigData/software/bin/listdiff.py Ping_1200bp_status.insertion_No1_2.acc.txt ../../Zero_mPing_Strain/RelocaTE2_Depth_Ping.Only.txt
+awk '{print $1"\tChr13\t1200\t1203\t+"}' Ping_1200bp_status.insertion_No1_2.txt > Ping_1200bp_status.insertion_No1_2.PreGFF.list
 
+echo "still missing after recall"
+cat Ping_*_recall/*_status.insertion_No1_2.txt | cut -f2| sort | uniq > Ping_ALL_recall.insertion_No1_2.txt
+python ~/BigData/software/bin/listdiff.py Ping_ALL_recall.insertion_No1_2.txt ../Zero_mPing_Strain/RelocaTE2_Depth_Ping.Only.txt | grep "list2" | cut -d" " -f4 | awk '{print $1"\t"$1}' > Ping_ALL_recall.still_missing.txt
+python Sub_matrix.py Ping_ALL_recall.still_missing.txt ../Zero_mPing_Strain/ping_3k_NM2.txt | sort -k2,2nr > Ping_ALL_recall.still_missing.ping_3k_NM2.txt
+python sum_pop_distri_general.py --input Ping_ALL_recall.still_missing.txt
+
+echo "echo Ping_5340_recall"
+mkdir Ping_5340_recall
+mkdir Ping_5340_recall/Ping_test_Round_Pre
+python ReNameSRA_subset.py --input Ping_test.5340.list
+cut -f2,5 Ping_test.5340.list.download.list | uniq | sort | uniq | sed 's/IRIS/IRIS_/' > Ping_test.5340.list.acc.txt
+cut -f2 Ping_test.5340.list.acc.txt | awk '{print "cp Ping_3230_recall/Ping_Depth_Psuedo_Ping_bam/"$1"_Pseudo.NM2.bam* ./Ping_5340_recall/Ping_test_Round_Pre/"}' > Ping_test.5340.cp.sh
+cp Ping_3230_recall/Ping_Round3_Pseudo_RF.fa Ping_5340_recall/Ping_test_Round_Pre/
+#
+mkdir Ping_test
+cd Ping_test
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/ERS470332*.fastq.gz ./
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/ERS470503*.fastq.gz ./
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/ERS469448*.fastq.gz ./
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/ERS469545*.fastq.gz ./
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/ERS469811*.fastq.gz ./
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/ERS468782*.fastq.gz ./
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/ERS468500*.fastq.gz ./
+cd ..
+#Round0
+mkdir Ping_test_Round0
+cd Ping_test_Round0
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_5340_recall/Ping_test/*.gz ./
+cd ..
+cat up_round0.fa ping_trun.fa down_round0.fa > Ping_Round0_Pseudo.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round0_Pseudo.fa > Ping_Round0_Pseudo_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round0_Pseudo.fa
+python Run_Map_multi_sample.py --fastq_dir Ping_test_Round0 --genome Ping_Round0_Pseudo.fa > log 2>&1 &
+#assemble
+mkdir Ping_test_local_assembly
+cd Ping_test_local_assembly
+cp ../../Ping_3230_recall/Ping_test_local_assembly/Get_List_Raw_Fastq* ./
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_5340_recall/Ping_test_Round0/ ./
+python Get_List_Raw_Fastq_runner_Ping.py --input Ping_test_Round0 > log 2>&1 &
+#Round1
+cat up_round1.fa ping_trun.fa down_round1.fa > Ping_Round1_Pseudo.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round1_Pseudo.fa > Ping_Round1_Pseudo_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round1_Pseudo.fa
+mkdir Ping_test_Round1
+cd Ping_test_Round1
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_5340_recall/Ping_test/*.gz ./
+cd ..  
+python Run_Map_multi_sample.py --fastq_dir Ping_test_Round1 --genome Ping_Round1_Pseudo.fa > log 2>&1 &
+#assemble
+cd Ping_test_local_assembly
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_5340_recall/Ping_test_Round1/ ./
+python Get_List_Raw_Fastq_runner_Ping.py --input Ping_test_Round1 > log 2>&1 &
+#Round2
+cat up_round2.fa ping_trun.fa down_round2.fa > Ping_Round2_Pseudo.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round2_Pseudo.fa > Ping_Round2_Pseudo_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round2_Pseudo.fa
+mkdir Ping_test_Round2
+cd Ping_test_Round2
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_5340_recall/Ping_test/*.gz ./
+cd ..  
+python Run_Map_multi_sample.py --fastq_dir Ping_test_Round2 --genome Ping_Round2_Pseudo.fa > log 2>&1 &
+#assemble
+cd Ping_test_local_assembly
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_5340_recall/Ping_test_Round2/ ./
+python Get_List_Raw_Fastq_runner_Ping.py --input Ping_test_Round2 > log 2>&1 &
+#Round3, just for building pseudogenome
+cat up_round3.fa ping_trun.fa down_round3.fa > Ping_Round3_Pseudo.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round3_Pseudo.fa > Ping_Round3_Pseudo_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round3_Pseudo.fa
+cat up_round3.fa down_round3.fa > Ping_Round3_Pseudo_noPing.fa
+perl ~/BigData/software/bin/fastaDeal.pl --reform line50 Ping_Round3_Pseudo_noPing.fa > Ping_Round3_Pseudo_noPing_RF.fa
+/opt/linux/centos/7.x/x86_64/pkgs/bwa/0.7.12/bin/bwa index Ping_Round3_Pseudo_noPing.fa
+mkdir Ping_test_Round3
+cd Ping_test_Round3
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_5340_recall/Ping_test/*.gz ./
+cd ..
+python Run_Map_multi_sample.py --fastq_dir Ping_test_Round3 --genome Ping_Round3_Pseudo.fa > log 2>&1 &
+#map to pseudo with ping
+mkdir Ping_Depth_Psuedo_Ping_bam
+cd Ping_Depth_Psuedo_Ping_bam
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/*.fastq.gz ./
+python Run_Map_multi_sample.py --fastq_dir Ping_Depth_Psuedo_Ping_bam --genome Ping_Round3_Pseudo.fa > log 2>&1 &
+#map to pseduo without ping
+mkdir Ping_Depth_Psuedo_noPing_bam
+cd Ping_Depth_Psuedo_noPing_bam
+ln -s ~/Rice/Rice_population_sequence/Rice_3000/analysis/Ping_missed_indica_pseudogenome/Ping_Depth/*.fastq.gz ./
+python Run_Map_multi_sample.py --fastq_dir Ping_Depth_Psuedo_noPing_bam --genome Ping_Round3_Pseudo_noPing.fa > log 2>&1 &
+echo "Ping 5340 bp status, Ping_up:928-2555, Ping_up:928-929"
+python mPing_Boundary_Coverage_Ping_5340bp.py --bam_ref Ping_Depth_Psuedo_noPing_bam --bam_pseudo Ping_Depth_Psuedo_Ping_bam > Ping_5340bp_status.txt
+#23
+awk '$5~/covered/ && $6~/covered/' Ping_5340bp_status.txt > Ping_5340bp_status.txt.insertion.list
+#12
+awk '$5!~/covered/ && $6~/covered/' Ping_5340bp_status.txt > Ping_5340bp_status.txt.No_1.list
+#7
+awk '$5~/covered/ && $6!~/covered/' Ping_5340bp_status.txt > Ping_5340bp_status.txt.No_2.list
+awk '$5!~/covered/ && $6!~/covered/' Ping_5340bp_status.txt > Ping_5340bp_status.txt.No_3.list
+#final list of strain having Ping 5340
+cat Ping_5340bp_status.txt.insertion.list Ping_5340bp_status.txt.No_1.list Ping_5340bp_status.txt.No_2.list > Ping_5340bp_status.insertion_No1_2.txt
+#this Ping is called in RelocaTE2: Chr11	ERS468796	RelocaTE_i	25822230	25822232
+#31 is called in 3k genome
+#Chr11   25822230        25822232        Chr11:25822230  +       31      0.171270718232
+grep "25822230" ../../High_Ping_Indonesia_group/Rice3k_3000_RelocaTEi_Ping.CombinedGFF.ALL.gff | cut -f2 > Ping_5340bp_status.RelocaTE2.known.list
+python ~/BigData/software/bin/listdiff.py Ping_5340bp_status.RelocaTE2.known.list Ping_5340bp_status.insertion_No1_2.txt > Ping_5340bp_status.insertion_No1_2.compare.list
+cut -f2 Ping_5340bp_status.insertion_No1_2.txt > Ping_5340bp_status.insertion_No1_2.acc.txt
+python ~/BigData/software/bin/listdiff.py ../../Zero_mPing_Strain/RelocaTE2_Depth_Ping.Only.txt Ping_5340bp_status.insertion_No1_2.acc.txt | grep "shared"
+#final list have four new strain have this Ping
+Ping_5340bp_status.insertion_No1_2.New.txt
+#make list for prepare GFF
+awk '{print $1"\tChr11\t25822230\t25822232\t+"}' Ping_5340bp_status.insertion_No1_2.New.txt > Ping_5340bp_status.insertion_No1_2.New.PreGFF.list
+
+echo "echo Ping_1479_2_recall: same with 1479 we have"
+mkdir Ping_1479_2_recall
+mkdir Ping_1479_2_recall/Ping_test_Round_Pre
+python ReNameSRA_subset.py --input Ping_test.1479_2.list
+cut -f2,5 Ping_test.1479_2.list.download.list | uniq | sort | uniq | sed 's/IRIS/IRIS_/' > Ping_test.1479_2.list.acc.txt
+cut -f2 Ping_test.1479_2.list.acc.txt | awk '{print "cp Ping_3230_recall/Ping_Depth_Psuedo_Ping_bam/"$1"_Pseudo.NM2.bam* ./Ping_1479_2_recall/Ping_test_Round_Pre/"}' > Ping_test.1479_2.cp.sh
+cp Ping_3230_recall/Ping_Round3_Pseudo_RF.fa Ping_1479_2_recall/Ping_test_Round_Pre/
+
+echo "Final add list"
+#Chr3    ERS469922       RelocaTE_i      33213691        33213693        .       -       .       ID=repeat_Chr3_33213691_33213693;Strain=ERS469922;TSD=TAA;
+#Note=Non-reference, not found in reference;Right_junction_reads:1;Left_junction_reads:1;Right_support_reads:3;Left_support_reads:1;
+cat Ping_*_recall/*.PreGFF.list > Ping_ALL_recall.PreGFF.list
+awk '{print $2"\t"$1"\tRelocaTE_i\t"$3"\t"$4"\t.\t+\t.\tID=repeat_"$2"_"$3"_"$4";Strain="$1";TSD=TAA;Note=Non-reference, not found in reference;Right_junction_reads:5;Left_junction_reads:5;Right_support_reads:5;Left_support_reads:5;"}' Ping_ALL_recall.PreGFF.list > Ping_ALL_recall.PreGFF.GFF
 
