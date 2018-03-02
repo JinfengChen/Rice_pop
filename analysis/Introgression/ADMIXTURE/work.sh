@@ -36,3 +36,8 @@ echo "Japonica high Ping strains"
 awk -F"\t" '$8>1' rice_line_ALL_3000.anno.list | grep "Japonica" > rice_line_ALL_3000.anno.list.Japonica_2.list
 python sum_pop_distri_general.py --input rice_line_ALL_3000.anno.list.Japonica_2.list
 python sum_pop_distri_general_3k_pop.py --input rice_line_ALL_3000.anno.list.Japonica_2.list
+
+echo "assign subgroup using ADMIXTURE result"
+python Assign_Individual_Pop.py --Qtable core_v0.7.pruneddata3.8.Q.strains_order.list --colortable core_v0.7.pruneddata3.8.Q.color.txt > core_v0.7.pruneddata3.8.Q.subgroup.assign.txt
+python Compare_Pop_Assign_ADMIXTURE.py --strain_list core_v0.7.pruneddata3.structure.nosex > core_v0.7.pruneddata3.8.Q.subgroup.assign.comparison.txt
+
